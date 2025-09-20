@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wall Materials Calculator</title>
     <style>
+    /* CSS remains the same as provided */
     :root {
         --primary-color: #2c3e50;
         --secondary-color: #3498db;
@@ -1004,9 +1005,9 @@
                             </select>
                             <span class="tooltip">Select spacing between vertical rebars</span>
                         </label>
-                        <label>Horizontal Rebar Layers (per meter height):
-                            <input type="number" id="horizontalLayers" value="3" min="1" step="1" title="Number of horizontal rebar layers per meter height">
-                            <span class="tooltip">Enter number of horizontal rebar layers per meter height</span>
+                        <label>Horizontal Rebar Layers (every X layers):
+                            <input type="number" id="horizontalLayers" value="3" min="1" step="1" title="Horizontal reinforcement every X layers of CHB">
+                            <span class="tooltip">Enter number of CHB layers between horizontal reinforcement</span>
                         </label>
                     </div>
                 `;
@@ -1364,7 +1365,10 @@
                     const verticalLength = verticalRebars * height;
                     
                     // Calculate horizontal rebars
-                    const horizontalLength = horizontalLayers * length;
+                    // Standard CHB height is 200mm, so calculate number of layers
+                    const chbLayers = Math.ceil(height / 0.2);
+                    const horizontalRebarLayers = Math.ceil(chbLayers / horizontalLayers);
+                    const horizontalLength = horizontalRebarLayers * length;
                     
                     // Total rebar length
                     const totalRebarLength = verticalLength + horizontalLength;
@@ -1377,6 +1381,8 @@
                     const rebarTotalCost = totalRebarLength * rebarCostPerMeter;
                     
                     accessoryResultsHtml += '<li>Rebar (' + rebarDiameter + '): ' + totalRebarLength.toFixed(2) + ' m (Cost: ' + currencySymbol + rebarTotalCost.toFixed(2) + ')</li>';
+                    accessoryResultsHtml += '<li>Vertical Rebars: ' + verticalLength.toFixed(2) + ' m</li>';
+                    accessoryResultsHtml += '<li>Horizontal Rebars: ' + horizontalLength.toFixed(2) + ' m (every ' + horizontalLayers + ' layers)</li>';
                     totalAccessoryCost += rebarTotalCost;
                 }
                 
@@ -1563,7 +1569,18 @@
 
     function downloadPDF() {
         try {
-            displayError('PDF functionality requires the jsPDF library. Please include it in your project.');
+            // Create a simple print-friendly version instead of PDF
+            const results = document.getElementById('results');
+            const originalDisplay = results.style.display;
+            
+            // Show the results if they're hidden
+            results.style.display = 'block';
+            
+            // Print the page
+            window.print();
+            
+            // Restore the original display state
+            results.style.display = originalDisplay;
         } catch (error) {
             displayError('PDF generation error: ' + error.message);
         }
