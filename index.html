@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wall Materials Calculator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
     :root {
         --primary-color: #2c3e50;
@@ -416,7 +414,7 @@
     }
 
     .formula-item:before {
-        content: ".";
+        content: "•";
         position: absolute;
         left: 0;
         color: var(--secondary-color);
@@ -439,6 +437,14 @@
         border-radius: 8px;
         margin-top: 15px;
         border-left: 3px solid var(--success-color);
+    }
+
+    .wall-type-selector {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(236, 240, 241, 0.5);
+        border-radius: 8px;
+        border-left: 3px solid var(--secondary-color);
     }
     </style>
 </head>
@@ -468,6 +474,20 @@
                 </div>
                 <div class="tab-content" id="materials-tab">
                     <h2>Material Layers</h2>
+                    <div class="wall-type-selector">
+                        <label>Select Wall Type:
+                            <select id="wallType" onchange="updateMaterialOptions()" title="Select the wall type to calculate appropriate materials and accessories">
+                                <option value="">Select Wall Type</option>
+                                <option value="chb">Concrete Hollow Block (CHB) Wall</option>
+                                <option value="brick">Brick Wall</option>
+                                <option value="glass-block">Glass Block Wall</option>
+                                <option value="aac">AAC Block Wall</option>
+                                <option value="sips">SIP Wall</option>
+                                <option value="precast">Precast Concrete Wall</option>
+                            </select>
+                            <span class="tooltip">Select wall type to show appropriate materials and accessories</span>
+                        </label>
+                    </div>
                     <div id="materials-container"></div>
                     <button type="button" class="add-material-btn" onclick="addMaterial()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -523,15 +543,10 @@
                         <h3>Accessory Costs</h3>
                     </div>
                     <div class="section-content" id="accessoryCosts">
-                        <label>Screw Cost (per piece): <input type="number" id="screwCost" step="0.01" min="0" value="1.5" title="Cost per piece of screw"><span class="tooltip">Enter cost per screw</span></label>
-                        <label>Joint Compound Cost (per kg): <input type="number" id="jointCompoundCost" step="0.01" min="0" value="50" title="Cost per kg of joint compound"><span class="tooltip">Enter cost per kg of joint compound</span></label>
-                        <label>Sealant Cost (per tube): <input type="number" id="sealantCost" step="0.01" min="0" value="200" title="Cost per tube of sealant"><span class="tooltip">Enter cost per tube of sealant</span></label>
-                        <label>Rebar Cost (per m): <input type="number" id="rebarCost" step="0.01" min="0" value="80" title="Cost per meter of rebar"><span class="tooltip">Enter cost per meter of rebar</span></label>
-                        <label>Gravel Cost (per m³): <input type="number" id="gravelCost" step="0.01" min="0" value="1200" title="Cost per cubic meter of gravel"><span class="tooltip">Enter cost per m³ of gravel</span></label>
-                        <label>Cement Cost (per bag): <input type="number" id="cementCost" step="0.01" min="0" value="250" title="Cost per 40kg bag of cement"><span class="tooltip">Enter cost per 40kg bag of cement</span></label>
-                        <label>Sand Cost (per m³): <input type="number" id="sandCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of sand"><span class="tooltip">Enter cost per m³ of sand</span></label>
-                        <label>Water Cost (per m³): <input type="number" id="waterCost" step="0.01" min="0" value="50" title="Cost per cubic meter of water"><span class="tooltip">Enter cost per m³ of water</span></label>
-                        <label>Wire Mesh Cost (per m²): <input type="number" id="wireMeshCost" step="0.01" min="0" value="100" title="Cost per square meter of wire mesh"><span class="tooltip">Enter cost per m² of wire mesh</span></label>
+                        <div id="accessoryInputs">
+                            <!-- Dynamic accessory inputs will be inserted here based on wall type -->
+                            <p class="note">Select a wall type in the Materials tab to see accessory costs</p>
+                        </div>
                     </div>
                     <div class="toggle-section" onclick="toggleSection('laborContingencyCosts')">
                         <span class="toggle-icon">›</span>
@@ -626,18 +641,18 @@
                             </tr>
                             <tr>
                                 <td>Equipment Cost</td>
-                                <td class="cost-value"><span id="currencySymbolEquipment"></span><span id="equipmentCostResult"></span></td>
-                                <td class="cost-value"><span id="currencySymbolEquipmentSqm"></span><span id="equipmentCostSqm"></span></td>
+                                <td class="content-value"><span id="currencySymbolEquipment"></span><span id="equipmentCostResult"></span></td>
+                                <td class="content-value"><span id="currencySymbolEquipmentSqm"></span><span id="equipmentCostSqm"></span></td>
                             </tr>
                             <tr>
                                 <td>Profit Margin</td>
-                                <td class="cost-value"><span id="currencySymbolProfit"></span><span id="profitCostResult"></span></td>
-                                <td class="cost-value"><span id="currencySymbolProfitSqm"></span><span id="profitCostSqm"></span></td>
+                                <td class="content-value"><span id="currencySymbolProfit"></span><span id="profitCostResult"></span></td>
+                                <td class="content-value"><span id="currencySymbolProfitSqm"></span><span id="profitCostSqm"></span></td>
                             </tr>
                             <tr>
                                 <td>Total Cost</td>
-                                <td class="cost-value"><span id="currencySymbolTotal"></span><span id="totalCost"></span></td>
-                                <td class="cost-value"><span id="currencySymbolTotalSqm"></span><span id="totalCostSqm"></span></td>
+                                <td class="content-value"><span id="currencySymbolTotal"></span><span id="totalCost"></span></td>
+                                <td class="content-value"><span id="currencySymbolTotalSqm"></span><span id="totalCostSqm"></span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -697,12 +712,94 @@
                 <div class="formula-item">Profit Margin = (Material Cost + Accessory Cost + Plastering Cost + Labor Cost + Contingency Cost + Overhead Cost + Equipment Cost) × Profit%</div>
                 <div class="formula-item">Total Cost = Material Cost + Accessory Cost + Plastering Cost + Labor Cost + Contingency Cost + Overhead Cost + Equipment Cost + Profit Margin</div>
             </div>
+            <div class="formula-box">
+                <div class="formula-title">Wall Type Notes:</div>
+                <div class="formula-item"><strong>CHB Wall:</strong> Mortar mix ratio typically 1:4 (cement:sand). Reinforcement spacing depends on structural design (e.g., every 3rd layer). Plastering is optional for aesthetic finish.</div>
+                <div class="formula-item"><strong>Brick Wall:</strong> Mortar mix ratio typically 1:6 (cement:sand). Bricks vary in size; adjust quantities accordingly. Reinforcement used for structural walls.</div>
+                <div class="formula-item"><strong>Glass Block Wall:</strong> Use specialized glass block mortar for better adhesion. Spacers ensure uniform gaps; sealant for weatherproofing. Reinforcement for stability, especially in larger walls.</div>
+                <div class="formula-item"><strong>AAC Block Wall:</strong> Thin-bed mortar reduces material use compared to CHB. AAC blocks are lightweight; check for load-bearing requirements. Specialized plaster may be needed for smooth finish.</div>
+                <div class="formula-item"><strong>SIP Wall:</strong> SIPS are pre-insulated; minimal additional insulation needed. Framing lumber for panel connections. Sealant ensures airtight joints.</div>
+                <div class="formula-item"><strong>Precast Concrete Wall:</strong> Panels are factory-made; size varies by design. Grout and sealant for joint sealing and stability. Minimal on-site materials due to prefabrication.</div>
+            </div>
         </div>
     </div>
 
     <script>
     let resultsData = null;
     let materialCount = 0;
+
+    // Wall type configurations with material requirements per square meter
+    const wallTypeConfig = {
+        'chb': {
+            name: 'Concrete Hollow Block (CHB) Wall',
+            materialType: 'chb',
+            accessories: {
+                'cement': { name: 'Cement', unit: 'bags', qtyPerSqm: 1, cost: 250, tooltip: 'Cement for mortar and plaster' },
+                'sand': { name: 'Sand', unit: 'm³', qtyPerSqm: 0.06, cost: 1000, tooltip: 'Sand for mortar and plaster' },
+                'gravel': { name: 'Gravel', unit: 'm³', qtyPerSqm: 0.12, cost: 1200, tooltip: 'Gravel for mortar and filler' },
+                'rebar': { name: 'Rebar (10mm)', unit: 'm', qtyPerSqm: 2.5, cost: 80, tooltip: 'Steel reinforcement bars' },
+                'tieWire': { name: 'Tie Wire', unit: 'kg', qtyPerSqm: 0.5, cost: 60, tooltip: 'Wire for tying rebars' },
+                'water': { name: 'Water', unit: 'liters', qtyPerSqm: 12, cost: 0.05, tooltip: 'Water for mixing' }
+            }
+        },
+        'brick': {
+            name: 'Brick Wall',
+            materialType: 'brick',
+            accessories: {
+                'cement': { name: 'Cement', unit: 'bags', qtyPerSqm: 0.5, cost: 250, tooltip: 'Cement for mortar' },
+                'sand': { name: 'Sand', unit: 'm³', qtyPerSqm: 0.05, cost: 1000, tooltip: 'Sand for mortar' },
+                'water': { name: 'Water', unit: 'liters', qtyPerSqm: 10, cost: 0.05, tooltip: 'Water for mixing' },
+                'wireMesh': { name: 'Wire Mesh', unit: 'm', qtyPerSqm: 1, cost: 100, tooltip: 'Reinforcement mesh for structural walls' }
+            }
+        },
+        'glass-block': {
+            name: 'Glass Block Wall',
+            materialType: 'glass-block',
+            accessories: {
+                'glassMortar': { name: 'Glass Block Mortar', unit: 'bags', qtyPerSqm: 0.3, cost: 300, tooltip: 'Specialized mortar for glass blocks' },
+                'sand': { name: 'Sand', unit: 'm³', qtyPerSqm: 0.03, cost: 1000, tooltip: 'Sand for mortar' },
+                'spacers': { name: 'Plastic Spacers', unit: 'pieces', qtyPerSqm: 25, cost: 2, tooltip: 'Spacers for uniform gaps' },
+                'rebar': { name: 'Stainless Rebar (6mm)', unit: 'm', qtyPerSqm: 2, cost: 120, tooltip: 'Stainless steel reinforcement' },
+                'sealant': { name: 'Silicone Sealant', unit: 'tubes', qtyPerSqm: 0.1, cost: 200, tooltip: 'Sealant for weatherproofing' },
+                'water': { name: 'Water', unit: 'liters', qtyPerSqm: 6, cost: 0.05, tooltip: 'Water for mixing' },
+                'expansionStrips': { name: 'Expansion Strips', unit: 'm', qtyPerSqm: 1, cost: 30, tooltip: 'Expansion strips for movement' }
+            }
+        },
+        'aac': {
+            name: 'AAC Block Wall',
+            materialType: 'aac',
+            accessories: {
+                'thinMortar': { name: 'Thin-Bed Mortar', unit: 'kg', qtyPerSqm: 2.5, cost: 20, tooltip: 'Special adhesive for AAC blocks' },
+                'cement': { name: 'Cement', unit: 'bags', qtyPerSqm: 0.1, cost: 250, tooltip: 'Cement for base bonding' },
+                'sand': { name: 'Sand', unit: 'm³', qtyPerSqm: 0.02, cost: 1000, tooltip: 'Sand for mortar' },
+                'water': { name: 'Water', unit: 'liters', qtyPerSqm: 5, cost: 0.05, tooltip: 'Water for mixing' },
+                'wireMesh': { name: 'Reinforcement Mesh', unit: 'm²', qtyPerSqm: 1, cost: 100, tooltip: 'Reinforcement mesh' }
+            }
+        },
+        'sips': {
+            name: 'SIP Wall',
+            materialType: 'sips',
+            accessories: {
+                'fasteners': { name: 'Fasteners', unit: 'pieces', qtyPerSqm: 25, cost: 1.5, tooltip: 'Screws/nails for panel installation' },
+                'adhesive': { name: 'Adhesive/Sealant', unit: 'tubes', qtyPerSqm: 0.1, cost: 200, tooltip: 'Polyurethane-based adhesive' },
+                'lumber': { name: 'Lumber', unit: 'm', qtyPerSqm: 2.5, cost: 50, tooltip: 'Framing lumber for connections' },
+                'foamTape': { name: 'Foam Tape', unit: 'm', qtyPerSqm: 2, cost: 10, tooltip: 'Tape for sealing joints' },
+                'sheathing': { name: 'Sheathing', unit: 'm²', qtyPerSqm: 1, cost: 150, tooltip: 'Plywood/OSB for exterior' },
+                'vaporBarrier': { name: 'Vapor Barrier', unit: 'm²', qtyPerSqm: 1, cost: 5, tooltip: 'Vapor barrier if required' }
+            }
+        },
+        'precast': {
+            name: 'Precast Concrete Wall',
+            materialType: 'precast',
+            accessories: {
+                'grout': { name: 'Cement Grout', unit: 'm³', qtyPerSqm: 0.01, cost: 1200, tooltip: 'Grout for joint sealing' },
+                'rebar': { name: 'Rebar (10mm)', unit: 'm', qtyPerSqm: 1.5, cost: 80, tooltip: 'Reinforcement for joints' },
+                'tieWire': { name: 'Tie Wire', unit: 'kg', qtyPerSqm: 0.2, cost: 60, tooltip: 'Wire for tying rebars' },
+                'anchors': { name: 'Lifting Anchors', unit: 'pieces', qtyPerSqm: 0.2, cost: 150, tooltip: 'Anchors for panel handling' },
+                'sealant': { name: 'Sealant', unit: 'tubes', qtyPerSqm: 0.1, cost: 200, tooltip: 'Sealant for joints' }
+            }
+        }
+    };
 
     const materialConfig = {
         'chb': {
@@ -713,18 +810,8 @@
             unitArea: 0.12,
             needsPlastering: true,
             productivityRate: 8,
-            accessories: { 
-                screws: false, 
-                jointCompound: false, 
-                sealants: false, 
-                mortar: true, 
-                rebars: true, 
-                connectors: false,
-                gravel: true
-            },
-            category: 'Masonry',
-            rebarOptions: ['10mm', '12mm'],
-            rebarSpacing: ['400mm', '600mm', '800mm']
+            accessories: { mortar: true, rebars: true, connectors: false, gravel: true },
+            category: 'Masonry'
         },
         'brick': {
             name: 'Clay Brick',
@@ -734,15 +821,7 @@
             unitArea: 0.05,
             needsPlastering: true,
             productivityRate: 6,
-            accessories: { 
-                screws: false, 
-                jointCompound: false, 
-                sealants: false, 
-                mortar: true, 
-                rebars: true, 
-                connectors: true,
-                gravel: false
-            },
+            accessories: { mortar: true, rebars: false, connectors: true, wireMesh: true },
             category: 'Masonry'
         },
         'aac': {
@@ -753,15 +832,7 @@
             unitArea: 0.12,
             needsPlastering: true,
             productivityRate: 7,
-            accessories: { 
-                screws: false, 
-                jointCompound: false, 
-                sealants: false, 
-                mortar: true, 
-                rebars: true, 
-                connectors: true,
-                gravel: false
-            },
+            accessories: { mortar: true, rebars: true, connectors: true, wireMesh: true },
             category: 'Masonry'
         },
         'glass-block': {
@@ -772,15 +843,7 @@
             unitArea: 0.04,
             needsPlastering: false,
             productivityRate: 5,
-            accessories: { 
-                screws: false, 
-                jointCompound: false, 
-                sealants: true, 
-                mortar: true, 
-                rebars: true, 
-                connectors: true,
-                gravel: false
-            },
+            accessories: { mortar: true, rebars: true, connectors: true, sealants: true },
             category: 'Masonry'
         },
         'sips': {
@@ -792,15 +855,7 @@
             unitArea: 2.88,
             needsPlastering: false,
             productivityRate: 15,
-            accessories: { 
-                screws: true, 
-                jointCompound: true, 
-                sealants: true, 
-                mortar: false, 
-                rebars: false, 
-                connectors: true,
-                gravel: false
-            },
+            accessories: { screws: true, jointCompound: true, sealants: true, mortar: false, rebars: false, connectors: true },
             category: 'Panelized'
         },
         'precast': {
@@ -812,15 +867,7 @@
             unitArea: 3.6,
             needsPlastering: false,
             productivityRate: 20,
-            accessories: { 
-                screws: false, 
-                jointCompound: false, 
-                sealants: true, 
-                mortar: false, 
-                rebars: false, 
-                connectors: true,
-                gravel: false
-            },
+            accessories: { screws: false, jointCompound: false, sealants: true, mortar: false, rebars: false, connectors: true },
             category: 'Panelized'
         }
     };
@@ -851,11 +898,18 @@
         try {
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
+            
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
                     tabs.forEach(t => t.classList.remove('active'));
+                    // Hide all tab contents
                     contents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
                     tab.classList.add('active');
+                    
+                    // Show the corresponding tab content
                     const tabId = tab.getAttribute('data-tab');
                     const content = document.getElementById(tabId + '-tab');
                     if (content) {
@@ -867,6 +921,66 @@
             });
         } catch (error) {
             displayError('Tab initialization error: ' + error.message);
+        }
+    }
+
+    function updateMaterialOptions() {
+        try {
+            const wallType = document.getElementById('wallType').value;
+            const materialContainer = document.getElementById('materials-container');
+            
+            if (!wallType) {
+                materialContainer.innerHTML = '';
+                addMaterial();
+                return;
+            }
+            
+            // Clear existing materials
+            materialContainer.innerHTML = '';
+            materialCount = 0;
+            
+            // Add a material card with the selected wall type
+            addMaterial();
+            
+            // Set the material type based on wall type
+            const materialTypeSelect = document.getElementById('materialType-1');
+            if (materialTypeSelect && wallTypeConfig[wallType]) {
+                materialTypeSelect.value = wallTypeConfig[wallType].materialType;
+                updateMaterialDetails(1);
+            }
+            
+            // Update accessory options
+            updateAccessoryOptions();
+        } catch (error) {
+            displayError('Error updating material options: ' + error.message);
+        }
+    }
+
+    function updateAccessoryOptions() {
+        try {
+            const wallType = document.getElementById('wallType').value;
+            const accessoryInputs = document.getElementById('accessoryInputs');
+            
+            if (!wallType) {
+                accessoryInputs.innerHTML = '<p class="note">Select a wall type in the Materials tab to see accessory costs</p>';
+                return;
+            }
+            
+            const config = wallTypeConfig[wallType];
+            let html = '';
+            
+            for (const [key, accessory] of Object.entries(config.accessories)) {
+                html += `
+                    <label>${accessory.name} Cost (per ${accessory.unit}):
+                        <input type="number" id="${key}Cost" step="0.01" min="0" value="${accessory.cost}" title="Cost per ${accessory.unit} of ${accessory.name}">
+                        <span class="tooltip">${accessory.tooltip}</span>
+                    </label>
+                `;
+            }
+            
+            accessoryInputs.innerHTML = html;
+        } catch (error) {
+            displayError('Error updating accessory options: ' + error.message);
         }
     }
 
@@ -885,21 +999,19 @@
                     <h3>Material Layer ${materialCount}</h3>
                     <button class="remove-material" onclick="removeMaterial(${materialCount})">Remove</button>
                 </div>
-                <label>Wall System:
-                    <select id="wallSystem-${materialCount}" onchange="updateMaterialOptions(${materialCount}); checkGlassBlock()" title="Select the wall system" required>
-                        <option value="">Select Wall System</option>
-                        <option value="Masonry">Masonry Wall System</option>
-                        <option value="Panelized">Panelized Wall System</option>
-                    </select>
-                    <span class="tooltip">Select Masonry or Panelized system</span>
-                </label>
                 <label>Material Type:
                     <select id="materialType-${materialCount}" onchange="updateMaterialDetails(${materialCount}); checkGlassBlock()" title="Select the type of material" required>
                         <option value="">Select Material</option>
+                        <option value="chb">Concrete Hollow Block (CHB)</option>
+                        <option value="brick">Clay Brick</option>
+                        <option value="aac">AAC Block</option>
+                        <option value="glass-block">Glass Block</option>
+                        <option value="sips">Structural Insulated Panels (SIPs)</option>
+                        <option value="precast">Precast Concrete</option>
                     </select>
                     <span class="tooltip">Select the material type</span>
                 </label>
-                <label>Type:
+                <label id="typeLabel-${materialCount}">Type:
                     <select id="materialTypeDetail-${materialCount}" title="Select the specific type of material" required>
                         <option value="">Select Type</option>
                     </select>
@@ -917,24 +1029,6 @@
                     </select>
                     <span class="tooltip">Select panel dimension</span>
                 </label>
-                <div id="chbOptions-${materialCount}" class="chb-options" style="display:none;">
-                    <h4>CHB Reinforcement Options</h4>
-                    <label>Rebar Diameter:
-                        <select id="rebarDiameter-${materialCount}" title="Select rebar diameter">
-                            <option value="10">10mm</option>
-                            <option value="12">12mm</option>
-                        </select>
-                        <span class="tooltip">Select rebar diameter for CHB reinforcement</span>
-                    </label>
-                    <label>Vertical Rebar Spacing (mm):
-                        <input type="number" id="verticalSpacing-${materialCount}" value="800" min="400" step="100" title="Spacing between vertical rebars">
-                        <span class="tooltip">Enter spacing between vertical rebars in mm</span>
-                    </label>
-                    <label>Horizontal Rebar Layers:
-                        <input type="number" id="horizontalLayers-${materialCount}" value="3" min="1" step="1" title="Number of horizontal rebar layers per meter">
-                        <span class="tooltip">Enter number of horizontal rebar layers per meter height</span>
-                    </label>
-                </div>
                 <label>Cost per Unit (<span id="currencyLabel-${materialCount}">${document.getElementById('currency')?.value || 'PHP'}</span>):
                     <input type="number" id="materialCost-${materialCount}" step="0.01" min="0" value="0" title="Cost per unit of the material" required>
                     <span class="tooltip">Enter cost per unit</span>
@@ -947,7 +1041,7 @@
             container.appendChild(materialCard);
             const newSelects = materialCard.querySelectorAll('select, input');
             newSelects.forEach(input => input.addEventListener('input', validateInput));
-            updateMaterialOptions(materialCount);
+            updateMaterialDetails(materialCount);
         } catch (error) {
             displayError('Error adding material: ' + error.message);
         }
@@ -968,9 +1062,7 @@
                         const id = input.id.replace(/\d+/, i + 1);
                         input.id = id;
                         if (input.tagName === 'SELECT') {
-                            if (input.id.includes('wallSystem')) {
-                                input.onchange = () => updateMaterialOptions(i + 1);
-                            } else if (input.id.includes('materialType')) {
+                            if (input.id.includes('materialType')) {
                                 input.onchange = () => { updateMaterialDetails(i + 1); checkGlassBlock(); };
                             }
                         }
@@ -986,42 +1078,6 @@
         }
     }
 
-    function updateMaterialOptions(index) {
-        try {
-            const wallSystemSelect = document.getElementById('wallSystem-' + index);
-            const materialTypeSelect = document.getElementById('materialType-' + index);
-            const typeSelect = document.getElementById('materialTypeDetail-' + index);
-            const thicknessSelect = document.getElementById('materialThickness-' + index);
-            const dimensionSelect = document.getElementById('materialDimension-' + index);
-            const dimensionLabel = document.getElementById('dimensionLabel-' + index);
-            const thicknessLabel = document.getElementById('thicknessLabel-' + index);
-            const chbOptions = document.getElementById('chbOptions-' + index);
-
-            if (!wallSystemSelect || !materialTypeSelect || !typeSelect || !thicknessSelect || !dimensionSelect || !dimensionLabel || !thicknessLabel || !chbOptions) {
-                throw new Error("Material input elements not found");
-            }
-
-            const wallSystem = wallSystemSelect.value;
-            materialTypeSelect.innerHTML = '<option value="">Select Material</option>';
-            typeSelect.innerHTML = '<option value="">Select Type</option>';
-            thicknessSelect.innerHTML = '<option value="">Select Thickness</option>';
-            dimensionSelect.innerHTML = '<option value="">Select Dimension</option>';
-
-            if (wallSystem) {
-                const materials = Object.keys(materialConfig).filter(key => materialConfig[key].category === wallSystem);
-                materials.forEach(key => {
-                    materialTypeSelect.innerHTML += '<option value="' + key + '">' + materialConfig[key].name + '</option>';
-                });
-                dimensionLabel.style.display = wallSystem === 'Panelized' ? 'block' : 'none';
-                thicknessLabel.style.display = wallSystem === 'Masonry' ? 'block' : 'none';
-                updateMaterialDetails(index);
-            }
-            checkGlassBlock();
-        } catch (error) {
-            displayError('Error updating material options: ' + error.message);
-        }
-    }
-
     function updateMaterialDetails(index) {
         try {
             const materialTypeSelect = document.getElementById('materialType-' + index);
@@ -1030,9 +1086,9 @@
             const dimensionSelect = document.getElementById('materialDimension-' + index);
             const dimensionLabel = document.getElementById('dimensionLabel-' + index);
             const thicknessLabel = document.getElementById('thicknessLabel-' + index);
-            const chbOptions = document.getElementById('chbOptions-' + index);
+            const typeLabel = document.getElementById('typeLabel-' + index);
 
-            if (!materialTypeSelect || !typeSelect || !thicknessSelect || !dimensionSelect || !dimensionLabel || !thicknessLabel || !chbOptions) {
+            if (!materialTypeSelect || !typeSelect || !thicknessSelect || !dimensionSelect || !dimensionLabel || !thicknessLabel || !typeLabel) {
                 throw new Error("Material detail elements not found");
             }
 
@@ -1041,30 +1097,44 @@
             thicknessSelect.innerHTML = '<option value="">Select Thickness</option>';
             dimensionSelect.innerHTML = '<option value="">Select Dimension</option>';
 
-            // Show/hide CHB options
+            // For CHB, hide the type selection and only show thickness
             if (materialType === 'chb') {
-                chbOptions.style.display = 'block';
-                thicknessLabel.style.display = 'none';
+                typeLabel.style.display = 'none';
+                thicknessLabel.style.display = 'block';
             } else {
-                chbOptions.style.display = 'none';
+                typeLabel.style.display = 'block';
                 thicknessLabel.style.display = 'block';
             }
 
             if (materialType && materialConfig[materialType]) {
                 const config = materialConfig[materialType];
-                config.types.forEach(type => {
-                    typeSelect.innerHTML += '<option value="' + type + '">' + type + '</option>';
-                });
-                config.thicknesses.forEach(thickness => {
-                    thicknessSelect.innerHTML += '<option value="' + thickness + '">' + thickness + ' mm</option>';
-                });
+                
+                // For CHB, add thickness options directly
+                if (materialType === 'chb') {
+                    config.thicknesses.forEach(thickness => {
+                        thicknessSelect.innerHTML += '<option value="' + thickness + '">' + thickness + ' mm</option>';
+                    });
+                } else {
+                    // For other materials, add type options
+                    config.types.forEach(type => {
+                        typeSelect.innerHTML += '<option value="' + type + '">' + type + '</option>';
+                    });
+                    
+                    // Add thickness options
+                    config.thicknesses.forEach(thickness => {
+                        thicknessSelect.innerHTML += '<option value="' + thickness + '">' + thickness + ' mm</option>';
+                    });
+                }
+                
                 if (config.dimensions) {
                     config.dimensions.forEach(dimension => {
                         dimensionSelect.innerHTML += '<option value="' + dimension + '">' + dimension + '</option>';
                     });
                     dimensionLabel.style.display = 'block';
+                    thicknessLabel.style.display = 'none';
                 } else {
                     dimensionLabel.style.display = 'none';
+                    thicknessLabel.style.display = 'block';
                 }
             }
         } catch (error) {
@@ -1132,6 +1202,7 @@
             addMaterial();
             checkGlassBlock();
             updateCurrencyLabels();
+            updateAccessoryOptions();
             form.querySelectorAll('input, select').forEach(input => {
                 input.classList.remove('input-error');
             });
@@ -1226,110 +1297,25 @@
             document.getElementById('currencySymbolMaterial').textContent = currencySymbol;
             document.getElementById('currencySymbolMaterialSqm').textContent = currencySymbol;
 
-            const screwCost = parseFloat(document.getElementById('screwCost')?.value) || 0;
-            const jointCompoundCost = parseFloat(document.getElementById('jointCompoundCost')?.value) || 0;
-            const sealantCost = parseFloat(document.getElementById('sealantCost')?.value) || 0;
-            const rebarCost = parseFloat(document.getElementById('rebarCost')?.value) || 0;
-            const gravelCost = parseFloat(document.getElementById('gravelCost')?.value) || 0;
-            const cementCost = parseFloat(document.getElementById('cementCost')?.value) || 0;
-            const sandCost = parseFloat(document.getElementById('sandCost')?.value) || 0;
-            const waterCost = parseFloat(document.getElementById('waterCost')?.value) || 0;
-            const wireMeshCost = parseFloat(document.getElementById('wireMeshCost')?.value) || 0;
-
+            // Get wall type for accessory calculations
+            const wallType = document.getElementById('wallType').value;
             let totalAccessoryCost = 0;
-            let totalScrewQty = 0, totalJointCompoundQty = 0, totalSealantQty = 0, totalRebarQty = 0;
-            let totalCementQty = 0, totalSandQty = 0, totalWaterQty = 0, totalGravelQty = 0;
             let accessoryResultsHtml = '<ul>';
 
-            materials.forEach(mat => {
-                const config = materialConfig[mat.materialType];
-                if (config.accessories.mortar) {
-                    const mortarVolume = wallArea * 0.01;
-                    const cementBags = Math.ceil(mortarVolume * 0.25 / 0.025 * 1.05);
-                    const sandCubicMeters = mortarVolume * 0.75 * 1.05;
-                    const waterVolume = mortarVolume * 0.5;
+            if (wallType && wallTypeConfig[wallType]) {
+                const config = wallTypeConfig[wallType];
+                
+                for (const [key, accessory] of Object.entries(config.accessories)) {
+                    const costPerUnit = parseFloat(document.getElementById(key + 'Cost')?.value) || accessory.cost;
+                    const quantity = wallArea * accessory.qtyPerSqm;
+                    const totalCost = quantity * costPerUnit;
                     
-                    const cementTotal = cementBags * cementCost;
-                    const sandTotal = sandCubicMeters * sandCost;
-                    const waterTotal = waterVolume * waterCost;
-                    
-                    totalCementQty += cementBags;
-                    totalSandQty += sandCubicMeters;
-                    totalWaterQty += waterVolume;
-                    
-                    accessoryResultsHtml += '<li>Cement: ' + cementBags + ' bags (Cost: ' + currencySymbol + cementTotal.toFixed(2) + ')</li>';
-                    accessoryResultsHtml += '<li>Sand: ' + sandCubicMeters.toFixed(2) + ' m³ (Cost: ' + currencySymbol + sandTotal.toFixed(2) + ')</li>';
-                    accessoryResultsHtml += '<li>Water: ' + waterVolume.toFixed(2) + ' m³ (Cost: ' + currencySymbol + waterTotal.toFixed(2) + ')</li>';
-                    
-                    totalAccessoryCost += cementTotal + sandTotal + waterTotal;
+                    accessoryResultsHtml += '<li>' + accessory.name + ': ' + quantity.toFixed(2) + ' ' + accessory.unit + ' (Cost: ' + currencySymbol + totalCost.toFixed(2) + ')</li>';
+                    totalAccessoryCost += totalCost;
                 }
-                
-                if (config.accessories.gravel) {
-                    const gravelVolume = wallArea * 0.005;
-                    const gravelTotal = gravelVolume * gravelCost;
-                    totalGravelQty += gravelVolume;
-                    accessoryResultsHtml += '<li>Gravel: ' + gravelVolume.toFixed(2) + ' m³ (Cost: ' + currencySymbol + gravelTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += gravelTotal;
-                }
-                
-                if (config.accessories.rebars) {
-                    let rebarQty;
-                    if (mat.materialType === 'chb') {
-                        // Special calculation for CHB rebars
-                        const verticalSpacing = parseFloat(document.getElementById('verticalSpacing-' + (materials.indexOf(mat) + 1))?.value) || 800;
-                        const horizontalLayers = parseFloat(document.getElementById('horizontalLayers-' + (materials.indexOf(mat) + 1))?.value) || 3;
-                        
-                        // Vertical rebars
-                        const verticalRebars = Math.ceil(length / (verticalSpacing / 1000));
-                        const verticalLength = verticalRebars * height;
-                        
-                        // Horizontal rebars
-                        const horizontalLength = horizontalLayers * length;
-                        
-                        rebarQty = verticalLength + horizontalLength;
-                    } else {
-                        // Standard calculation for other materials
-                        rebarQty = wallArea * 0.1;
-                    }
-                    
-                    const rebarTotal = rebarQty * rebarCost;
-                    totalRebarQty += rebarQty;
-                    accessoryResultsHtml += '<li>Rebar: ' + rebarQty.toFixed(2) + ' m (Cost: ' + currencySymbol + rebarTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += rebarTotal;
-                }
-                
-                if (config.accessories.connectors) {
-                    const connectorQty = Math.ceil(wallArea / 2);
-                    const connectorCostVal = parseFloat(document.getElementById('connectorCost')?.value) || 0;
-                    const connectorTotal = connectorQty * connectorCostVal;
-                    accessoryResultsHtml += '<li>Connectors: ' + connectorQty + ' pieces (Cost: ' + currencySymbol + connectorTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += connectorTotal;
-                }
-                
-                if (config.accessories.screws) {
-                    const screwQty = Math.ceil(wallArea * 25);
-                    const screwTotal = screwQty * screwCost;
-                    totalScrewQty += screwQty;
-                    accessoryResultsHtml += '<li>Screws: ' + screwQty + ' pieces (Cost: ' + currencySymbol + screwTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += screwTotal;
-                }
-                
-                if (config.accessories.jointCompound) {
-                    const jointCompoundQty = wallArea * 0.5;
-                    const jointCompoundTotal = jointCompoundQty * jointCompoundCost;
-                    totalJointCompoundQty += jointCompoundQty;
-                    accessoryResultsHtml += '<li>Joint Compound: ' + jointCompoundQty.toFixed(2) + ' kg (Cost: ' + currencySymbol + jointCompoundTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += jointCompoundTotal;
-                }
-                
-                if (config.accessories.sealants) {
-                    const sealantQty = length * 0.1;
-                    const sealantTotal = sealantQty * sealantCost;
-                    totalSealantQty += sealantQty;
-                    accessoryResultsHtml += '<li>Sealant: ' + sealantQty.toFixed(2) + ' tubes (Cost: ' + currencySymbol + sealantTotal.toFixed(2) + ')</li>';
-                    totalAccessoryCost += sealantTotal;
-                }
-            });
+            } else {
+                accessoryResultsHtml += '<li>No wall type selected for accessory calculation</li>';
+            }
 
             accessoryResultsHtml += '</ul>';
             document.getElementById('accessoryResults').innerHTML = accessoryResultsHtml;
@@ -1341,6 +1327,12 @@
             const plasterSides = document.getElementById('plasterSides')?.value || 'none';
             const wireMesh = document.getElementById('wireMesh')?.checked || false;
             const plasterThickness = parseFloat(document.getElementById('plasterThickness')?.value) || 10;
+
+            // Get costs for plastering materials
+            const cementCost = parseFloat(document.getElementById('cementCost')?.value) || 250;
+            const sandCost = parseFloat(document.getElementById('sandCost')?.value) || 1000;
+            const waterCost = parseFloat(document.getElementById('waterCost')?.value) || 0.05;
+            const wireMeshCost = parseFloat(document.getElementById('wireMeshCost')?.value) || 100;
 
             let totalPlasteringCost = 0;
             let plasterCementQty = 0, plasterSandQty = 0, plasterWaterQty = 0, wireMeshQty = 0;
@@ -1363,7 +1355,7 @@
                 
                 plasteringResultsHtml += '<li>Cement: ' + plasterCementQty + ' bags (Cost: ' + currencySymbol + cementTotal.toFixed(2) + ')</li>';
                 plasteringResultsHtml += '<li>Sand: ' + plasterSandQty.toFixed(2) + ' m³ (Cost: ' + currencySymbol + sandTotal.toFixed(2) + ')</li>';
-                plasteringResultsHtml += '<li>Water: ' + plasterWaterQty.toFixed(2) + ' m³ (Cost: ' + currencySymbol + waterTotal.toFixed(2) + ')</li>';
+                plasteringResultsHtml += '<li>Water: ' + plasterWaterQty.toFixed(2) + ' liters (Cost: ' + currencySymbol + waterTotal.toFixed(2) + ')</li>';
                 
                 if (wireMesh) {
                     plasteringResultsHtml += '<li>Wire Mesh: ' + wireMeshQty.toFixed(2) + ' m² (Cost: ' + currencySymbol + wireMeshTotal.toFixed(2) + ')</li>';
@@ -1440,14 +1432,6 @@
             resultsData = {
                 materials,
                 accessories: {
-                    screws: totalScrewQty,
-                    jointCompound: totalJointCompoundQty,
-                    sealant: totalSealantQty,
-                    rebar: totalRebarQty,
-                    cement: totalCementQty,
-                    sand: totalSandQty,
-                    water: totalWaterQty,
-                    gravel: totalGravelQty,
                     totalCost: totalAccessoryCost
                 },
                 plastering: {
@@ -1496,252 +1480,7 @@
 
     function downloadPDF() {
         try {
-            if (typeof window.jspdf === 'undefined') {
-                displayError('PDF library not loaded. Please refresh the page and try again.');
-                return;
-            }
-
-            if (!resultsData || !resultsData.materials || resultsData.materials.length === 0) {
-                displayError('Please calculate the results first before generating a PDF.');
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            doc.setProperties({
-                title: 'Masonry and Panelized Wall Calculation Report',
-                subject: 'Construction Materials Estimation',
-                author: document.getElementById('preparedBy')?.value || 'Unknown',
-                keywords: 'construction, materials, calculator, estimation',
-                creator: 'Masonry and Panelized Wall Calculator'
-            });
-            doc.setFont("helvetica");
-
-            doc.setFontSize(18);
-            doc.setTextColor(40, 40, 40);
-            doc.text('Masonry and Panelized Wall Calculator', 105, 20, { align: 'center' });
-
-            doc.setDrawColor(200, 200, 200);
-            doc.line(10, 25, 200, 25);
-
-            doc.setFontSize(12);
-            let y = 35;
-            doc.setFont(undefined, 'bold');
-            doc.text('Project Information', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-            doc.text('Project Name: ' + (document.getElementById('projectName')?.value || 'N/A'), 10, y);
-            doc.text('Date: ' + (document.getElementById('date')?.value || 'N/A'), 110, y);
-            y += 7;
-            doc.text('Location: ' + (document.getElementById('projectLocation')?.value || 'N/A'), 10, y);
-            doc.text('Prepared By: ' + (document.getElementById('preparedBy')?.value || 'N/A'), 110, y);
-            y += 7;
-            doc.text('Client: ' + (document.getElementById('clientName')?.value || 'N/A'), 10, y);
-            doc.text('Company: ' + (document.getElementById('companyName')?.value || 'N/A'), 110, y);
-            y += 15;
-
-            doc.setFont(undefined, 'bold');
-            doc.text('Wall Parameters', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-
-            const wallParamsTable = {
-                head: [['Parameter', 'Value']],
-                body: [
-                    ['Length', document.getElementById('wallLengthResult')?.textContent || 'N/A'], 
-                    ['Height', document.getElementById('wallHeightResult')?.textContent || 'N/A'], 
-                    ['Door Area', document.getElementById('doorAreaResult')?.textContent || 'N/A'], 
-                    ['Window Area', document.getElementById('windowAreaResult')?.textContent || 'N/A'], 
-                    ['Total Wall Area', document.getElementById('wallArea')?.textContent || 'N/A']
-                ]
-            };
-
-            doc.autoTable({
-                startY: y,
-                head: wallParamsTable.head,
-                body: wallParamsTable.body,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                margin: { left: 10, right: 10 }
-            });
-
-            y = doc.lastAutoTable.finalY + 10;
-            if (y > 250) { doc.addPage(); y = 20; }
-
-            doc.setFont(undefined, 'bold');
-            doc.text('Material Summary', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-
-            const currency = document.getElementById('currency')?.value || 'PHP';
-            const currencySymbol = { 'PHP': '₱', 'USD': '$', 'EUR': '€', 'JPY': '¥' }[currency] || '₱';
-            const materialsTable = {
-                head: [['Material', 'Category', 'Quantity', 'Cost', 'Cost/m²']],
-                body: resultsData.materials.map(mat => [
-                    mat.type,
-                    mat.category,
-                    mat.quantity.toFixed(2) + ' ' + (materialConfig[mat.materialType]?.unit || 'units'),
-                    currencySymbol + mat.totalCost.toFixed(2),
-                    currencySymbol + (mat.totalCost / resultsData.wallArea).toFixed(2)
-                ])
-            };
-
-            doc.autoTable({
-                startY: y,
-                head: materialsTable.head,
-                body: materialsTable.body,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                margin: { left: 10, right: 10 }
-            });
-
-            y = doc.lastAutoTable.finalY + 10;
-            if (y > 250) { doc.addPage(); y = 20; }
-
-            doc.setFont(undefined, 'bold');
-            doc.text('Accessory Materials', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-
-            const accessoriesTable = {
-                head: [['Accessory', 'Quantity', 'Cost']],
-                body: [
-                    resultsData.accessories.cement > 0 ? ['Cement', resultsData.accessories.cement.toFixed(2) + ' bags', currencySymbol + (resultsData.accessories.cement * parseFloat(document.getElementById('cementCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.sand > 0 ? ['Sand', resultsData.accessories.sand.toFixed(2) + ' m³', currencySymbol + (resultsData.accessories.sand * parseFloat(document.getElementById('sandCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.water > 0 ? ['Water', resultsData.accessories.water.toFixed(2) + ' m³', currencySymbol + (resultsData.accessories.water * parseFloat(document.getElementById('waterCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.gravel > 0 ? ['Gravel', resultsData.accessories.gravel.toFixed(2) + ' m³', currencySymbol + (resultsData.accessories.gravel * parseFloat(document.getElementById('gravelCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.rebar > 0 ? ['Rebar', resultsData.accessories.rebar.toFixed(2) + ' m', currencySymbol + (resultsData.accessories.rebar * parseFloat(document.getElementById('rebarCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.screws > 0 ? ['Screws', resultsData.accessories.screws.toFixed(2) + ' pieces', currencySymbol + (resultsData.accessories.screws * parseFloat(document.getElementById('screwCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.jointCompound > 0 ? ['Joint Compound', resultsData.accessories.jointCompound.toFixed(2) + ' kg', currencySymbol + (resultsData.accessories.jointCompound * parseFloat(document.getElementById('jointCompoundCost')?.value || 0)).toFixed(2)] : null,
-                    resultsData.accessories.sealant > 0 ? ['Sealant', resultsData.accessories.sealant.toFixed(2) + ' tubes', currencySymbol + (resultsData.accessories.sealant * parseFloat(document.getElementById('sealantCost')?.value || 0)).toFixed(2)] : null
-                ].filter(item => item !== null)
-            };
-
-            doc.autoTable({
-                startY: y,
-                head: accessoriesTable.head,
-                body: accessoriesTable.body.length > 0 ? accessoriesTable.body : [['No accessories', '0', currencySymbol + '0.00']],
-                theme: 'grid',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                margin: { left: 10, right: 10 }
-            });
-
-            y = doc.lastAutoTable.finalY + 10;
-            if (y > 250) { doc.addPage(); y = 20; }
-
-            if (resultsData.plastering.totalCost > 0) {
-                doc.setFont(undefined, 'bold');
-                doc.text('Plastering Materials', 10, y);
-                doc.setFont(undefined, 'normal');
-                y += 8;
-
-                const plasteringTable = {
-                    head: [['Plastering Material', 'Quantity', 'Cost']],
-                    body: [
-                        resultsData.plastering.cement > 0 ? ['Cement', resultsData.plastering.cement.toFixed(2) + ' bags', currencySymbol + (resultsData.plastering.cement * parseFloat(document.getElementById('cementCost')?.value || 0)).toFixed(2)] : null,
-                        resultsData.plastering.sand > 0 ? ['Sand', resultsData.plastering.sand.toFixed(2) + ' m³', currencySymbol + (resultsData.plastering.sand * parseFloat(document.getElementById('sandCost')?.value || 0)).toFixed(2)] : null,
-                        resultsData.plastering.water > 0 ? ['Water', resultsData.plastering.water.toFixed(2) + ' m³', currencySymbol + (resultsData.plastering.water * parseFloat(document.getElementById('waterCost')?.value || 0)).toFixed(2)] : null,
-                        resultsData.plastering.wireMesh > 0 ? ['Wire Mesh', resultsData.plastering.wireMesh.toFixed(2) + ' m²', currencySymbol + (resultsData.plastering.wireMesh * parseFloat(document.getElementById('wireMeshCost')?.value || 0)).toFixed(2)] : null
-                    ].filter(item => item !== null)
-                };
-
-                doc.autoTable({
-                    startY: y,
-                    head: plasteringTable.head,
-                    body: plasteringTable.body,
-                    theme: 'grid',
-                    headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                    styles: { fontSize: 10, cellPadding: 3 },
-                    margin: { left: 10, right: 10 }
-                });
-
-                y = doc.lastAutoTable.finalY + 10;
-                if (y > 250) { doc.addPage(); y = 20; }
-            }
-
-            doc.setFont(undefined, 'bold');
-            doc.text('Cost Summary', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-
-            const costTable = {
-                head: [['Item', 'Cost', 'Cost/m²']],
-                body: [
-                    ['Materials', currencySymbol + (document.getElementById('materialCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('materialCostSqm')?.textContent || '0.00')],
-                    ['Accessories', currencySymbol + (document.getElementById('accessoryCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('accessoryCostSqm')?.textContent || '0.00')],
-                    ['Plastering', currencySymbol + (document.getElementById('plasteringCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('plasteringCostSqm')?.textContent || '0.00')],
-                    ['Labor', currencySymbol + (document.getElementById('laborCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('laborCostSqm')?.textContent || '0.00')],
-                    ['Contingency', currencySymbol + (document.getElementById('contingencyCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('contingencyCostSqm')?.textContent || '0.00')],
-                    ['Overhead', currencySymbol + (document.getElementById('overheadCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('overheadCostSqm')?.textContent || '0.00')],
-                    ['Equipment', currencySymbol + (document.getElementById('equipmentCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('equipmentCostSqm')?.textContent || '0.00')],
-                    ['Profit Margin', currencySymbol + (document.getElementById('profitCostResult')?.textContent || '0.00'), currencySymbol + (document.getElementById('profitCostSqm')?.textContent || '0.00')],
-                    ['Total', currencySymbol + (document.getElementById('totalCost')?.textContent || '0.00'), currencySymbol + (document.getElementById('totalCostSqm')?.textContent || '0.00')]
-                ].filter(row => {
-                    if (row[0] === 'Plastering') return resultsData.plastering.totalCost > 0;
-                    return true;
-                })
-            };
-            
-            doc.autoTable({
-                startY: y,
-                head: costTable.head,
-                body: costTable.body,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                margin: { left: 10, right: 10 },
-                footStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: 'bold' }
-            });
-            
-            y = doc.lastAutoTable.finalY + 10;
-            if (y > 250) { doc.addPage(); y = 20; }
-
-            doc.setFont(undefined, 'bold');
-            doc.text('Labor Details', 10, y);
-            doc.setFont(undefined, 'normal');
-            y += 8;
-
-            const laborDetailsTable = {
-                head: [['Detail', 'Value']],
-                body: [
-                    ['Number of Laborers', document.getElementById('laborersResult')?.textContent || 'N/A'],
-                    ['Labor Cost per m²', currencySymbol + (parseFloat(document.getElementById('laborCost')?.value || 0).toFixed(2))],
-                    ['Productivity Rate', document.getElementById('productivityRate')?.textContent || 'N/A'],
-                    ['Preparation Time', document.getElementById('prepTimeResult')?.textContent || 'N/A'],
-                    ['Installation Time', document.getElementById('installTime')?.textContent || 'N/A'],
-                    ['Cleanup Time', document.getElementById('cleanupTimeResult')?.textContent || 'N/A'],
-                    ['Total Duration', document.getElementById('totalDays')?.textContent || 'N/A']
-                ]
-            };
-            
-            doc.autoTable({
-                startY: y,
-                head: laborDetailsTable.head,
-                body: laborDetailsTable.body,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                margin: { left: 10, right: 10 }
-            });
-
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(100, 100, 100);
-                const footerText = 'Masonry and Panelized Wall Calculator by AestimareDesign';
-                const pageText = 'Page ' + i + ' of ' + pageCount;
-                const totalWidth = doc.getTextWidth(footerText) + doc.getTextWidth(pageText) + 10;
-                doc.text(footerText, 105 - (totalWidth / 2), 290, { align: 'left' });
-                doc.text(pageText, 105 + (totalWidth / 2), 290, { align: 'right' });
-                doc.text('Generated on ' + new Date().toLocaleDateString(), 10, 290);
-            }
-
-            doc.save('masonry_panelized_wall_calculation.pdf');
+            displayError('PDF functionality requires the jsPDF library. Please include it in your project.');
         } catch (error) {
             displayError('PDF generation error: ' + error.message);
         }
