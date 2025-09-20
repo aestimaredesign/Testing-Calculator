@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Materials Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* CSS will be provided in Batch 2 */
+    </style>
+</head>
+<body>
+    <div class="wall-calculator">
+        <div class="calculator-form">
+            <h1>Masonry and Panelized Wall Calculator</h1>
+            <form id="calculatorForm">
+                <div class="tab-container">
+                    <div class="tab active" data-tab="project">Project Info</div>
+                    <div class="tab" data-tab="materials">Materials</div>
+                    <div class="tab" data-tab="costs">Costs</div>
+                </div>
+                <div class="tab-content active" id="project-tab">
+                    <h2>Project Information</h2>
+                    <label>Project Name: <input type="text" id="projectName" value="Office Renovation" title="Name of the project" required><span class="tooltip">Enter the project name</span></label>
+                    <label>Project Location: <input type="text" id="projectLocation" value="Manila" title="Location of the project" required><span class="tooltip">Enter the project location</span></label>
+                    <label>Client Name: <input type="text" id="clientName" value="John Dela Cruz" title="Name of the client" required><span class="tooltip">Enter the client name</span></label>
+                    <label>Client Company: <input type="text" id="companyName" value="Quality Builders Inc." title="Name of the company" required><span class="tooltip">Enter the client company</span></label>
+                    <label>Date: <input type="date" id="date" value="2025-09-18" title="Date of estimation" required><span class="tooltip">Select the estimation date</span></label>
+                    <label>Prepared By: <input type="text" id="preparedBy" value="Maria Santos" title="Name of the estimator" required><span class="tooltip">Enter the estimator's name</span></label>
+                    <h2>Wall Parameters</h2>
+                    <label>Length (m): <input type="number" id="length" step="0.01" min="0.01" value="10" title="Length of the wall in meters" required><span class="tooltip">Enter wall length in meters</span></label>
+                    <label>Height (m): <input type="number" id="height" step="0.01" min="0.01" value="3" title="Height of the wall in meters" required><span class="tooltip">Enter wall height in meters</span></label>
+                    <label>Door Area (m²): <input type="number" id="doorArea" step="0.01" min="0" value="0" title="Total area of doors" required><span class="tooltip">Enter total door area in m²</span></label>
+                    <label>Window Area (m²): <input type="number" id="windowArea" step="0.01" min="0" value="0" title="Total area of windows" required><span class="tooltip">Enter total window area in m²</span></label>
+                </div>
+                <div class="tab-content" id="materials-tab">
+                    <h2>Material Layers</h2>
+                    <div id="materials-container">
+                        <!-- CHB-specific material input -->
+                        <div class="material-layer">
+                            <label>Wall Type:
+                                <select id="wallType" onchange="updateMaterialFields()">
+                                    <option value="chb">CHB (Concrete Hollow Block)</option>
+                                    <option value="panelized">Panelized</option>
+                                </select>
+                            </label>
+                            <div id="chbFields" style="display:none;">
+                                <label>Thickness (mm): <input type="number" id="chbThickness" step="1" min="100" value="100" title="Thickness of CHB in mm" required><span class="tooltip">Enter CHB thickness in mm</span></label>
+                            </div>
+                            <div id="panelizedFields" style="display:none;">
+                                <!-- Panelized fields remain unchanged for now -->
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="add-material-btn" onclick="addMaterial()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="white" d="M12 4V12H4V14H12V20H14V14H20V12H14V4H12Z"/>
+                        </svg>
+                        Add Material Layer
+                    </button>
+                    <div class="accessory-section" id="chbAccessoriesSection">
+                        <div class="toggle-section" onclick="toggleSection('chbAccessoriesOptions')">
+                            <span class="toggle-icon">►</span>
+                            <h3>CHB Accessories</h3>
+                        </div>
+                        <div class="section-content" id="chbAccessoriesOptions">
+                            <label>Rebar Diameter:
+                                <select id="rebarDiameter" title="Select rebar diameter">
+                                    <option value="10">10 mm</option>
+                                    <option value="12">12 mm</option>
+                                </select>
+                                <span class="tooltip">Select rebar diameter</span>
+                            </label>
+                            <label>Vertical Reinforcement Spacing (mm):
+                                <select id="vertSpacing" title="Select vertical reinforcement spacing">
+                                    <option value="400">400 mm</option>
+                                    <option value="600">600 mm</option>
+                                    <option value="800">800 mm</option>
+                                </select>
+                                <span class="tooltip">Select vertical spacing</span>
+                            </label>
+                            <label>Wire Mesh:
+                                <input type="checkbox" id="wireMesh" title="Include wire mesh for CHB">
+                                <span class="tooltip">Check to include wire mesh</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="accessory-section" id="plasteringSection">
+                        <div class="toggle-section" onclick="toggleSection('plasteringOptions')">
+                            <span class="toggle-icon">►</span>
+                            <h3>Plastering Options</h3>
+                        </div>
+                        <div class="section-content" id="plasteringOptions">
+                            <label>Plastering Sides:
+                                <select id="plasterSides" title="Select plastering sides">
+                                    <option value="none">None</option>
+                                    <option value="one">One Side</option>
+                                    <option value="both">Both Sides</option>
+                                </select>
+                                <span class="tooltip">Select which sides to plaster</span>
+                            </label>
+                            <label>Plastering Thickness (mm):
+                                <input type="number" id="plasterThickness" value="10" min="0" step="1" title="Thickness of the plaster in millimeters">
+                                <span class="tooltip">Enter plaster thickness in mm</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="costs-tab">
+                    <h2>Cost Parameters</h2>
+                    <label>Currency:
+                        <select id="currency" title="Select the currency for cost estimation" onchange="updateCurrencyLabels()">
+                            <option value="PHP">PHP (₱)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="JPY">JPY (¥)</option>
+                        </select>
+                        <span class="tooltip">Select currency for costs</span>
+                    </label>
+                    <div class="toggle-section" onclick="toggleSection('mainMaterialCosts')">
+                        <span class="toggle-icon">►</span>
+                        <h3>Main Material Costs</h3>
+                    </div>
+                    <div class="section-content" id="mainMaterialCosts">
+                        <p class="note">Note: Individual material costs are set in the Materials tab</p>
+                    </div>
+                    <div class="toggle-section" onclick="toggleSection('chbAccessoryCosts')">
+                        <span class="toggle-icon">►</span>
+                        <h3>CHB Accessory Costs</h3>
+                    </div>
+                    <div class="section-content" id="chbAccessoryCosts">
+                        <label>Cement Cost (per 40kg bag): <input type="number" id="cementCost" step="0.01" min="0" value="250" title="Cost per 40kg bag of cement"><span class="tooltip">Enter cost per bag of cement</span></label>
+                        <label>Gravel Cost (per m³): <input type="number" id="gravelCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of gravel"><span class="tooltip">Enter cost per m³ of gravel</span></label>
+                        <label>Coarse Sand Cost (per m³): <input type="number" id="coarseSandCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of coarse sand"><span class="tooltip">Enter cost per m³ of coarse sand</span></label>
+                        <label>Fine Sand Cost (per m³): <input type="number" id="fineSandCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of fine sand"><span class="tooltip">Enter cost per m³ of fine sand</span></label>
+                        <label>Water Cost (per m³): <input type="number" id="waterCost" step="0.01" min="0" value="50" title="Cost per cubic meter of water"><span class="tooltip">Enter cost per m³ of water</span></label>
+                        <label>Rebar Cost (per m): <input type="number" id="rebarCost" step="0.01" min="0" value="80" title="Cost per meter of rebar"><span class="tooltip">Enter cost per meter of rebar</span></label>
+                        <label>Wire Mesh Cost (per m²): <input type="number" id="wireMeshCost" step="0.01" min="0" value="100" title="Cost per square meter of wire mesh"><span class="tooltip">Enter cost per m² of wire mesh</span></label>
+                    </div>
+                    <div class="toggle-section" onclick="toggleSection('laborContingencyCosts')">
+                        <span class="toggle-icon">►</span>
+                        <h3>Labor & Contingency Costs</h3>
+                    </div>
+                    <div class="section-content" id="laborContingencyCosts">
+                        <label>Labor Cost (per m²): <input type="number" id="laborCost" step="0.01" min="0" value="350" title="Cost of labor per square meter of wall area"><span class="tooltip">Enter labor cost per m²</span></label>
+                        <label>Number of Laborers: <input type="number" id="laborers" step="1" min="1" value="4" title="Number of laborers for the project" required><span class="tooltip">Enter number of laborers</span></label>
+                        <label>Contingency (%): <input type="number" id="contingency" step="1" min="0" max="20" value="10" title="Percentage for unexpected costs" required><span class="tooltip">Enter contingency percentage</span></label>
+                        <label>Preparation Time (days): <input type="number" id="prepTime" step="0.01" min="0" value="0.5" title="Preparation time in days" required><span class="tooltip">Enter preparation time in days</span></label>
+                        <label>Cleanup Time (days): <input type="number" id="cleanupTime" step="0.01" min="0" value="0.5" title="Cleanup time in days" required><span class="tooltip">Enter cleanup time in days</span></label>
+                    </div>
+                    <div class="toggle-section" onclick="toggleSection('additionalCosts')">
+                        <span class="toggle-icon">►</span>
+                        <h3>Additional Costs</h3>
+                    </div>
+                    <div class="section-content" id="additionalCosts">
+                        <label>Overhead (%): <input type="number" id="overhead" step="1" min="0" max="20" value="10" title="Percentage for overhead costs" required><span class="tooltip">Enter overhead percentage</span></label>
+                        <label>Equipment (%): <input type="number" id="equipment" step="1" min="0" max="20" value="5" title="Percentage for equipment costs" required><span class="tooltip">Enter equipment percentage</span></label>
+                        <label>Profit Margin (%): <input type="number" id="profitMargin" step="1" min="0" max="20" value="15" title="Percentage for profit margin" required><span class="tooltip">Enter profit margin percentage</span></label>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button type="submit" id="calculateButton">Calculate</button>
+                        <button type="button" class="secondary" onclick="resetForm()">Reset</button>
+                    </div>
+                </form>
+                <div id="results" class="results" style="display:none;">
+                    <!-- Results section remains unchanged for now, will be updated with JavaScript -->
+                </div>
+            </div>
+            <div class="guidelines">
+                <!-- Guidelines remain unchanged for now -->
+            </div>
+        </div>
+    </div>
+    <script>
+        // JavaScript to be provided in Batch 2 to handle dynamic updates
+        function updateMaterialFields() {
+            const wallType = document.getElementById('wallType').value;
+            document.getElementById('chbFields').style.display = wallType === 'chb' ? 'block' : 'none';
+            document.getElementById('panelizedFields').style.display = wallType === 'panelized' ? 'block' : 'none';
+        }
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const icon = section.previousElementSibling.querySelector('.toggle-icon');
+            if (section.style.display === 'block') {
+                section.style.display = 'none';
+                icon.textContent = '►';
+            } else {
+                section.style.display = 'block';
+                icon.textContent = '▼';
+            }
+        }
+    </script>
+</body>
+</html>
