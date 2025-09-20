@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Materials Calculator</title>
+    <title>Masonry and Panelized Wall Calculator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -67,7 +67,6 @@
             border-bottom: 1px solid var(--medium-gray);
             padding-bottom: 8px;
         }
-        /* Rest of the CSS remains unchanged */
     </style>
 </head>
 <body>
@@ -253,7 +252,6 @@
                         <label>Screw Cost (per piece): <input type="number" id="screwCost" step="0.01" min="0" value="1.5" title="Cost per piece of screw"><span class="tooltip">Enter cost per screw</span></label>
                         <label>Joint Compound Cost (per kg): <input type="number" id="jointCompoundCost" step="0.01" min="0" value="50" title="Cost per kg of joint compound"><span class="tooltip">Enter cost per kg of joint compound</span></label>
                         <label>Sealant Cost (per tube): <input type="number" id="sealantCost" step="0.01" min="0" value="200" title="Cost per tube of sealant"><span class="tooltip">Enter cost per tube of sealant</span></label>
-                        <label>Rebar Cost (per m): <input type="number" id="rebarCostPanel" step="0.01" min="0" value="80" title="Cost per meter of rebar"><span class="tooltip">Enter cost per meter of rebar</span></label>
                         <label>Connector Cost (per piece): <input type="number" id="connectorCost" step="0.01" min="0" value="50" title="Cost per piece of connector"><span class="tooltip">Enter cost per connector</span></label>
                     </div>
                     <div class="toggle-section" onclick="toggleSection('laborContingencyCosts')">
