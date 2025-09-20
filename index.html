@@ -446,6 +446,14 @@
         border-radius: 8px;
         border-left: 3px solid var(--secondary-color);
     }
+    
+    .locked-material {
+        background-color: #f0f0f0;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        margin-top: 6px;
+    }
     </style>
 </head>
 <body>
@@ -553,7 +561,7 @@
                         <h3>Labor & Contingency Costs</h3>
                     </div>
                     <div class="section-content" id="laborContingencyCosts">
-                        <label>Labor Cost (per m²): <input type="number" id="laborCost" step="0.01" min="0" value="350" title="Cost of labor per square meter of wall area"><span class="tooltip">Enter labor cost per m²</span></label>
+                        <label>Labor Cost (per day): <input type="number" id="laborCostPerDay" step="0.01" min="0" value="500" title="Cost of labor per day"><span class="tooltip">Enter labor cost per day</span></label>
                         <label>Number of Laborers: <input type="number" id="laborers" step="1" min="1" value="4" title="Number of laborers for the project" required><span class="tooltip">Enter number of laborers</span></label>
                         <label>Contingency (%): <input type="number" id="contingency" step="1" min="0" max="20" value="10" title="Percentage for unexpected costs" required><span class="tooltip">Enter contingency percentage</span></label>
                         <label>Preparation Time (days): <input type="number" id="prepTime" step="0.01" min="0" value="0.5" title="Preparation time in days" required><span class="tooltip">Enter preparation time in days</span></label>
@@ -593,6 +601,8 @@
                 </div>
                 <h3>Labor Details</h3>
                 <p><strong>Number of Laborers:</strong> <span class="value" id="laborersResult"></span></p>
+                <p><strong>Labor Cost per Day:</strong> <span class="value" id="laborCostPerDayResult"></span></p>
+                <p><strong>Labor Cost per m²:</strong> <span class="value" id="laborCostPerSqmResult"></span></p>
                 <p><strong>Productivity Rate:</strong> <span class="value" id="productivityRate"></span></p>
                 <p><strong>Preparation Time:</strong> <span class="value" id="prepTimeResult"></span></p>
                 <p><strong>Installation Time:</strong> <span class="value" id="installTime"></span></p>
@@ -641,18 +651,18 @@
                             </tr>
                             <tr>
                                 <td>Equipment Cost</td>
-                                <td class="content-value"><span id="currencySymbolEquipment"></span><span id="equipmentCostResult"></span></td>
-                                <td class="content-value"><span id="currencySymbolEquipmentSqm"></span><span id="equipmentCostSqm"></span></td>
+                                <td class="cost-value"><span id="currencySymbolEquipment"></span><span id="equipmentCostResult"></span></td>
+                                <td class="cost-value"><span id="currencySymbolEquipmentSqm"></span><span id="equipmentCostSqm"></span></td>
                             </tr>
                             <tr>
                                 <td>Profit Margin</td>
-                                <td class="content-value"><span id="currencySymbolProfit"></span><span id="profitCostResult"></span></td>
-                                <td class="content-value"><span id="currencySymbolProfitSqm"></span><span id="profitCostSqm"></span></td>
+                                <td class="cost-value"><span id="currencySymbolProfit"></span><span id="profitCostResult"></span></td>
+                                <td class="cost-value"><span id="currencySymbolProfitSqm"></span><span id="profitCostSqm"></span></td>
                             </tr>
                             <tr>
                                 <td>Total Cost</td>
-                                <td class="content-value"><span id="currencySymbolTotal"></span><span id="totalCost"></span></td>
-                                <td class="content-value"><span id="currencySymbolTotalSqm"></span><span id="totalCostSqm"></span></td>
+                                <td class="cost-value"><span id="currencySymbolTotal"></span><span id="totalCost"></span></td>
+                                <td class="cost-value"><span id="currencySymbolTotalSqm"></span><span id="totalCostSqm"></span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -699,13 +709,15 @@
                 <div class="formula-title">Labor Estimation:</div>
                 <div class="formula-item">Installation Days = Wall Area / Productivity Rate</div>
                 <div class="formula-item">Total Days = (Preparation Days + Installation Days + Cleanup Days) / Number of Laborers</div>
+                <div class="formula-item">Labor Cost = Total Days × Labor Cost per Day × Number of Laborers</div>
+                <div class="formula-item">Labor Cost per m² = Labor Cost / Wall Area</div>
             </div>
             <div class="formula-box">
                 <div class="formula-title">Cost Estimation:</div>
                 <div class="formula-item">Material Cost = Σ(Material Quantity × Cost per Unit)</div>
                 <div class="formula-item">Accessory Cost = Σ(Accessory Quantity × Cost per Unit)</div>
                 <div class="formula-item">Plastering Cost = (Plaster Cement Bags × Cost per Bag) + (Plaster Sand m³ × Cost per m³) + (Plaster Water × Cost per m³) + (Wire Mesh × Cost per m²)</div>
-                <div class="formula-item">Labor Cost = Wall Area × Labor Cost per m²</div>
+                <div class="formula-item">Labor Cost = Total Days × Labor Cost per Day × Number of Laborers</div>
                 <div class="formula-item">Contingency Cost = (Material Cost + Accessory Cost + Plastering Cost + Labor Cost) × Contingency%</div>
                 <div class="formula-item">Overhead Cost = (Material Cost + Accessory Cost + Plastering Cost + Labor Cost) × Overhead%</div>
                 <div class="formula-item">Equipment Cost = (Material Cost + Accessory Cost + Plastering Cost + Labor Cost) × Equipment%</div>
@@ -737,7 +749,8 @@
                 'cement': { name: 'Cement', unit: 'bags', qtyPerSqm: 1, cost: 250, tooltip: 'Cement for mortar and plaster' },
                 'sand': { name: 'Sand', unit: 'm³', qtyPerSqm: 0.06, cost: 1000, tooltip: 'Sand for mortar and plaster' },
                 'gravel': { name: 'Gravel', unit: 'm³', qtyPerSqm: 0.12, cost: 1200, tooltip: 'Gravel for mortar and filler' },
-                'rebar': { name: 'Rebar (10mm)', unit: 'm', qtyPerSqm: 2.5, cost: 80, tooltip: 'Steel reinforcement bars' },
+                'rebar10mm': { name: 'Rebar (10mm)', unit: 'm', qtyPerSqm: 2.5, cost: 80, tooltip: '10mm steel reinforcement bars' },
+                'rebar12mm': { name: 'Rebar (12mm)', unit: 'm', qtyPerSqm: 2.5, cost: 95, tooltip: '12mm steel reinforcement bars' },
                 'tieWire': { name: 'Tie Wire', unit: 'kg', qtyPerSqm: 0.5, cost: 60, tooltip: 'Wire for tying rebars' },
                 'water': { name: 'Water', unit: 'liters', qtyPerSqm: 12, cost: 0.05, tooltip: 'Water for mixing' }
             }
@@ -946,6 +959,8 @@
             const materialTypeSelect = document.getElementById('materialType-1');
             if (materialTypeSelect && wallTypeConfig[wallType]) {
                 materialTypeSelect.value = wallTypeConfig[wallType].materialType;
+                // Disable the material type selection
+                materialTypeSelect.disabled = true;
                 updateMaterialDetails(1);
             }
             
@@ -969,7 +984,40 @@
             const config = wallTypeConfig[wallType];
             let html = '';
             
+            // For CHB, add rebar diameter selection
+            if (wallType === 'chb') {
+                html += `
+                    <div class="chb-options">
+                        <h4>CHB Reinforcement Options</h4>
+                        <label>Rebar Diameter:
+                            <select id="rebarDiameter" title="Select rebar diameter">
+                                <option value="10mm">10mm</option>
+                                <option value="12mm">12mm</option>
+                            </select>
+                            <span class="tooltip">Select rebar diameter for CHB reinforcement</span>
+                        </label>
+                        <label>Vertical Rebar Spacing (mm):
+                            <select id="rebarSpacing" title="Select vertical rebar spacing">
+                                <option value="400">400mm</option>
+                                <option value="600">600mm</option>
+                                <option value="800" selected>800mm</option>
+                            </select>
+                            <span class="tooltip">Select spacing between vertical rebars</span>
+                        </label>
+                        <label>Horizontal Rebar Layers (per meter height):
+                            <input type="number" id="horizontalLayers" value="3" min="1" step="1" title="Number of horizontal rebar layers per meter height">
+                            <span class="tooltip">Enter number of horizontal rebar layers per meter height</span>
+                        </label>
+                    </div>
+                `;
+            }
+            
             for (const [key, accessory] of Object.entries(config.accessories)) {
+                // For CHB, only show the selected rebar diameter
+                if (wallType === 'chb' && (key === 'rebar10mm' || key === 'rebar12mm')) {
+                    continue; // Skip individual rebar options as we have a selector now
+                }
+                
                 html += `
                     <label>${accessory.name} Cost (per ${accessory.unit}):
                         <input type="number" id="${key}Cost" step="0.01" min="0" value="${accessory.cost}" title="Cost per ${accessory.unit} of ${accessory.name}">
@@ -1305,7 +1353,39 @@
             if (wallType && wallTypeConfig[wallType]) {
                 const config = wallTypeConfig[wallType];
                 
+                // For CHB, calculate rebar based on spacing options
+                if (wallType === 'chb') {
+                    const rebarDiameter = document.getElementById('rebarDiameter')?.value || '10mm';
+                    const rebarSpacing = parseFloat(document.getElementById('rebarSpacing')?.value) || 800;
+                    const horizontalLayers = parseFloat(document.getElementById('horizontalLayers')?.value) || 3;
+                    
+                    // Calculate vertical rebars
+                    const verticalRebars = Math.ceil(length / (rebarSpacing / 1000));
+                    const verticalLength = verticalRebars * height;
+                    
+                    // Calculate horizontal rebars
+                    const horizontalLength = horizontalLayers * length;
+                    
+                    // Total rebar length
+                    const totalRebarLength = verticalLength + horizontalLength;
+                    
+                    // Get cost based on diameter
+                    const rebarCostPerMeter = rebarDiameter === '10mm' ? 
+                        (parseFloat(document.getElementById('rebar10mmCost')?.value) || 80) :
+                        (parseFloat(document.getElementById('rebar12mmCost')?.value) || 95);
+                    
+                    const rebarTotalCost = totalRebarLength * rebarCostPerMeter;
+                    
+                    accessoryResultsHtml += '<li>Rebar (' + rebarDiameter + '): ' + totalRebarLength.toFixed(2) + ' m (Cost: ' + currencySymbol + rebarTotalCost.toFixed(2) + ')</li>';
+                    totalAccessoryCost += rebarTotalCost;
+                }
+                
                 for (const [key, accessory] of Object.entries(config.accessories)) {
+                    // Skip rebar options for CHB as we've already handled them
+                    if (wallType === 'chb' && (key === 'rebar10mm' || key === 'rebar12mm')) {
+                        continue;
+                    }
+                    
                     const costPerUnit = parseFloat(document.getElementById(key + 'Cost')?.value) || accessory.cost;
                     const quantity = wallArea * accessory.qtyPerSqm;
                     const totalCost = quantity * costPerUnit;
@@ -1370,7 +1450,7 @@
             document.getElementById('currencySymbolPlasterSqm').textContent = currencySymbol;
             document.getElementById('plasteringCostRow').style.display = totalPlasteringCost > 0 ? 'table-row' : 'none';
 
-            const laborCostPerSqm = parseFloat(document.getElementById('laborCost')?.value) || 0;
+            const laborCostPerDay = parseFloat(document.getElementById('laborCostPerDay')?.value) || 0;
             const numLaborers = parseInt(document.getElementById('laborers')?.value) || 1;
             const prepTime = parseFloat(document.getElementById('prepTime')?.value) || 0;
             const cleanupTime = parseFloat(document.getElementById('cleanupTime')?.value) || 0;
@@ -1379,11 +1459,14 @@
             const equipmentPercent = parseFloat(document.getElementById('equipment')?.value) / 100 || 0;
             const profitMarginPercent = parseFloat(document.getElementById('profitMargin')?.value) / 100 || 0;
 
-            const laborCostTotal = wallArea * laborCostPerSqm;
             const installTime = wallArea / totalProductivityRate;
             const totalDays = (prepTime + installTime + cleanupTime) / numLaborers;
+            const laborCostTotal = totalDays * laborCostPerDay * numLaborers;
+            const laborCostPerSqm = laborCostTotal / wallArea;
 
             document.getElementById('laborersResult').textContent = numLaborers;
+            document.getElementById('laborCostPerDayResult').textContent = currencySymbol + laborCostPerDay.toFixed(2);
+            document.getElementById('laborCostPerSqmResult').textContent = currencySymbol + laborCostPerSqm.toFixed(2);
             document.getElementById('productivityRate').textContent = totalProductivityRate.toFixed(2) + ' m²/day';
             document.getElementById('prepTimeResult').textContent = prepTime.toFixed(2) + ' days';
             document.getElementById('installTime').textContent = installTime.toFixed(2) + ' days';
