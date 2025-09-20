@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* CSS remains unchanged as per your request */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -103,6 +102,11 @@
                                 <select id="wallType" onchange="updateMaterialFields()">
                                     <option value="chb">CHB (Concrete Hollow Block)</option>
                                     <option value="panelized">Panelized</option>
+                                    <option value="bricks">Bricks</option>
+                                    <option value="aac">AAC (Autoclaved Aerated Concrete)</option>
+                                    <option value="sip">SIP (Structural Insulated Panels)</option>
+                                    <option value="precast">Precast Panels</option>
+                                    <option value="glass">Glass Blocks</option>
                                 </select>
                             </label>
                             <div id="chbFields" style="display:none;">
@@ -110,7 +114,31 @@
                                 <!-- Removed Select Type as per request -->
                             </div>
                             <div id="panelizedFields" style="display:none;">
-                                <!-- Panelized fields remain unchanged -->
+                                <label>Panel Thickness (mm): <input type="number" id="panelThickness" step="1" min="50" value="50" title="Thickness of panel in mm"><span class="tooltip">Enter panel thickness in mm</span></label>
+                                <label>Panel Type:
+                                    <select id="panelType" title="Select panel type">
+                                        <option value="plywood">Plywood</option>
+                                        <option value="fiber-cement">Fiber Cement Board</option>
+                                        <option value="osb">OSB</option>
+                                        <option value="gypsum">Gypsum Board</option>
+                                    </select>
+                                    <span class="tooltip">Select panel type</span>
+                                </label>
+                            </div>
+                            <div id="bricksFields" style="display:none;">
+                                <label>Brick Thickness (mm): <input type="number" id="brickThickness" step="1" min="50" value="100" title="Thickness of brick in mm"><span class="tooltip">Enter brick thickness in mm</span></label>
+                            </div>
+                            <div id="aacFields" style="display:none;">
+                                <label>AAC Thickness (mm): <input type="number" id="aacThickness" step="1" min="50" value="100" title="Thickness of AAC in mm"><span class="tooltip">Enter AAC thickness in mm</span></label>
+                            </div>
+                            <div id="sipFields" style="display:none;">
+                                <label>SIP Thickness (mm): <input type="number" id="sipThickness" step="1" min="50" value="100" title="Thickness of SIP in mm"><span class="tooltip">Enter SIP thickness in mm</span></label>
+                            </div>
+                            <div id="precastFields" style="display:none;">
+                                <label>Precast Thickness (mm): <input type="number" id="precastThickness" step="1" min="50" value="100" title="Thickness of precast in mm"><span class="tooltip">Enter precast thickness in mm</span></label>
+                            </div>
+                            <div id="glassFields" style="display:none;">
+                                <label>Glass Block Thickness (mm): <input type="number" id="glassThickness" step="1" min="50" value="100" title="Thickness of glass block in mm"><span class="tooltip">Enter glass block thickness in mm</span></label>
                             </div>
                         </div>
                     </div>
@@ -145,8 +173,20 @@
                                 <input type="checkbox" id="wireMesh" title="Include wire mesh for CHB">
                                 <span class="tooltip">Check to include wire mesh</span>
                             </label>
-                            <!-- Removed Connectors as per request -->
                             <label>Gravel Cost (per m³): <input type="number" id="gravelCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of gravel"><span class="tooltip">Enter cost per m³ of gravel</span></label>
+                            <!-- Removed Connectors as per request -->
+                        </div>
+                    </div>
+                    <div class="accessory-section" id="panelizedAccessoriesSection">
+                        <div class="toggle-section" onclick="toggleSection('panelizedAccessoriesOptions')">
+                            <span class="toggle-icon">►</span>
+                            <h3>Panelized Accessories</h3>
+                        </div>
+                        <div class="section-content" id="panelizedAccessoriesOptions">
+                            <label>Screw Cost (per piece): <input type="number" id="screwCost" step="0.01" min="0" value="1.5" title="Cost per piece of screw"><span class="tooltip">Enter cost per screw</span></label>
+                            <label>Joint Compound Cost (per kg): <input type="number" id="jointCompoundCost" step="0.01" min="0" value="50" title="Cost per kg of joint compound"><span class="tooltip">Enter cost per kg of joint compound</span></label>
+                            <label>Sealant Cost (per tube): <input type="number" id="sealantCost" step="0.01" min="0" value="200" title="Cost per tube of sealant"><span class="tooltip">Enter cost per tube of sealant</span></label>
+                            <label>Connector Cost (per piece): <input type="number" id="connectorCost" step="0.01" min="0" value="50" title="Cost per piece of connector"><span class="tooltip">Enter cost per connector</span></label>
                         </div>
                     </div>
                     <div class="accessory-section" id="plasteringSection">
@@ -204,6 +244,17 @@
                         <label>Rebar Cost (per m): <input type="number" id="rebarCost" step="0.01" min="0" value="80" title="Cost per meter of rebar"><span class="tooltip">Enter cost per meter of rebar</span></label>
                         <label>Wire Mesh Cost (per m²): <input type="number" id="wireMeshCost" step="0.01" min="0" value="100" title="Cost per square meter of wire mesh"><span class="tooltip">Enter cost per m² of wire mesh</span></label>
                         <label>Gravel Cost (per m³): <input type="number" id="gravelCost" step="0.01" min="0" value="1000" title="Cost per cubic meter of gravel"><span class="tooltip">Enter cost per m³ of gravel</span></label>
+                    </div>
+                    <div class="toggle-section" onclick="toggleSection('panelizedAccessoryCosts')">
+                        <span class="toggle-icon">►</span>
+                        <h3>Panelized Accessory Costs</h3>
+                    </div>
+                    <div class="section-content" id="panelizedAccessoryCosts">
+                        <label>Screw Cost (per piece): <input type="number" id="screwCost" step="0.01" min="0" value="1.5" title="Cost per piece of screw"><span class="tooltip">Enter cost per screw</span></label>
+                        <label>Joint Compound Cost (per kg): <input type="number" id="jointCompoundCost" step="0.01" min="0" value="50" title="Cost per kg of joint compound"><span class="tooltip">Enter cost per kg of joint compound</span></label>
+                        <label>Sealant Cost (per tube): <input type="number" id="sealantCost" step="0.01" min="0" value="200" title="Cost per tube of sealant"><span class="tooltip">Enter cost per tube of sealant</span></label>
+                        <label>Rebar Cost (per m): <input type="number" id="rebarCostPanel" step="0.01" min="0" value="80" title="Cost per meter of rebar"><span class="tooltip">Enter cost per meter of rebar</span></label>
+                        <label>Connector Cost (per piece): <input type="number" id="connectorCost" step="0.01" min="0" value="50" title="Cost per piece of connector"><span class="tooltip">Enter cost per connector</span></label>
                     </div>
                     <div class="toggle-section" onclick="toggleSection('laborContingencyCosts')">
                         <span class="toggle-icon">►</span>
@@ -355,11 +406,15 @@
         </div>
     </div>
     <script>
-        // JavaScript remains largely unchanged, with updates to reflect new fields
         function updateMaterialFields() {
             const wallType = document.getElementById('wallType').value;
             document.getElementById('chbFields').style.display = wallType === 'chb' ? 'block' : 'none';
             document.getElementById('panelizedFields').style.display = wallType === 'panelized' ? 'block' : 'none';
+            document.getElementById('bricksFields').style.display = wallType === 'bricks' ? 'block' : 'none';
+            document.getElementById('aacFields').style.display = wallType === 'aac' ? 'block' : 'none';
+            document.getElementById('sipFields').style.display = wallType === 'sip' ? 'block' : 'none';
+            document.getElementById('precastFields').style.display = wallType === 'precast' ? 'block' : 'none';
+            document.getElementById('glassFields').style.display = wallType === 'glass' ? 'block' : 'none';
         }
         function toggleSection(sectionId) {
             const section = document.getElementById(sectionId);
@@ -389,14 +444,70 @@
             const wallArea = (length * height) - (doorArea + windowArea);
             document.getElementById('wallArea').textContent = wallArea.toFixed(2);
 
-            // Updated accessory cost calculations for CHB
+            const wallType = document.getElementById('wallType').value;
+            let materialCost = 0;
+            if (wallType === 'chb') {
+                const chbThickness = parseFloat(document.getElementById('chbThickness').value) || 100;
+                materialCost = (wallArea * chbThickness * 0.001) * 100; // Placeholder cost per m³
+            } else if (wallType === 'panelized') {
+                const panelThickness = parseFloat(document.getElementById('panelThickness').value) || 50;
+                materialCost = (wallArea * panelThickness * 0.001) * 150; // Placeholder cost per m³
+            } else if (wallType === 'bricks') {
+                const brickThickness = parseFloat(document.getElementById('brickThickness').value) || 100;
+                materialCost = (wallArea * brickThickness * 0.001) * 120; // Placeholder cost per m³
+            } else if (wallType === 'aac') {
+                const aacThickness = parseFloat(document.getElementById('aacThickness').value) || 100;
+                materialCost = (wallArea * aacThickness * 0.001) * 130; // Placeholder cost per m³
+            } else if (wallType === 'sip') {
+                const sipThickness = parseFloat(document.getElementById('sipThickness').value) || 100;
+                materialCost = (wallArea * sipThickness * 0.001) * 140; // Placeholder cost per m³
+            } else if (wallType === 'precast') {
+                const precastThickness = parseFloat(document.getElementById('precastThickness').value) || 100;
+                materialCost = (wallArea * precastThickness * 0.001) * 160; // Placeholder cost per m³
+            } else if (wallType === 'glass') {
+                const glassThickness = parseFloat(document.getElementById('glassThickness').value) || 100;
+                materialCost = (wallArea * glassThickness * 0.001) * 200; // Placeholder cost per m³
+            }
+
+            let accessoryCost = 0;
+            if (wallType === 'chb') {
+                const cementCost = parseFloat(document.getElementById('cementCost').value) || 0;
+                const coarseSandCost = parseFloat(document.getElementById('coarseSandCost').value) || 0;
+                const waterCost = parseFloat(document.getElementById('waterCost').value) || 0;
+                const fineSandCost = parseFloat(document.getElementById('fineSandCost').value) || 0;
+                const rebarCost = parseFloat(document.getElementById('rebarCost').value) || 0;
+                const wireMeshCost = parseFloat(document.getElementById('wireMeshCost').value) || 0;
+                const gravelCost = parseFloat(document.getElementById('gravelCost').value) || 0;
+                accessoryCost = (wallArea * 0.01 * 0.25 / 0.025 * cementCost) + // Cement
+                               (wallArea * 0.01 * 0.75 * coarseSandCost) + // Coarse Sand
+                               (wallArea * 0.01 * 0.5 * waterCost) + // Water
+                               (wallArea * 0.1 * rebarCost) + // Rebar
+                               (document.getElementById('wireMesh').checked ? wallArea * wireMeshCost : 0) + // Wire Mesh
+                               (wallArea * 0.01 * 0.75 * fineSandCost) + // Fine Sand
+                               (wallArea * 0.01 * 0.5 * gravelCost); // Gravel
+            } else if (wallType === 'panelized') {
+                const screwCost = parseFloat(document.getElementById('screwCost').value) || 0;
+                const jointCompoundCost = parseFloat(document.getElementById('jointCompoundCost').value) || 0;
+                const sealantCost = parseFloat(document.getElementById('sealantCost').value) || 0;
+                const connectorCost = parseFloat(document.getElementById('connectorCost').value) || 0;
+                accessoryCost = (wallArea * 25 * screwCost) + // Screws
+                               (wallArea * 0.5 * jointCompoundCost) + // Joint Compound
+                               (length * 0.1 * sealantCost) + // Sealant
+                               (Math.ceil(wallArea / 2) * connectorCost); // Connectors
+            }
+
+            const plasterSides = document.getElementById('plasterSides').value;
+            const plasterThickness = parseFloat(document.getElementById('plasterThickness').value) || 0;
+            const plasterArea = plasterSides === 'none' ? 0 : wallArea * (plasterSides === 'both' ? 2 : 1);
+            const plasterVolume = plasterArea * (plasterThickness / 1000);
             const cementCost = parseFloat(document.getElementById('cementCost').value) || 0;
-            const coarseSandCost = parseFloat(document.getElementById('coarseSandCost').value) || 0;
-            const waterCost = parseFloat(document.getElementById('waterCost').value) || 0;
             const fineSandCost = parseFloat(document.getElementById('fineSandCost').value) || 0;
-            const rebarCost = parseFloat(document.getElementById('rebarCost').value) || 0;
+            const waterCost = parseFloat(document.getElementById('waterCost').value) || 0;
             const wireMeshCost = parseFloat(document.getElementById('wireMeshCost').value) || 0;
-            const gravelCost = parseFloat(document.getElementById('gravelCost').value) || 0;
+            const plasterCost = (plasterVolume * 0.25 / 0.025 * cementCost) + // Cement
+                              (plasterVolume * 0.75 * fineSandCost) + // Fine Sand
+                              (plasterVolume * 0.5 * waterCost) + // Water
+                              (document.getElementById('wireMesh').checked ? plasterArea * wireMeshCost : 0); // Wire Mesh
 
             const laborCost = parseFloat(document.getElementById('laborCost').value) || 0;
             const laborers = parseInt(document.getElementById('laborers').value) || 1;
@@ -406,25 +517,6 @@
             const overhead = parseFloat(document.getElementById('overhead').value) / 100 || 0;
             const equipment = parseFloat(document.getElementById('equipment').value) / 100 || 0;
             const profitMargin = parseFloat(document.getElementById('profitMargin').value) / 100 || 0;
-
-            // Placeholder for material and accessory quantities (to be detailed in full implementation)
-            const materialCost = 0; // To be calculated based on material quantities
-            const accessoryCost = (wallArea * 0.01 * 0.25 / 0.025 * cementCost) + // Cement
-                                 (wallArea * 0.01 * 0.75 * coarseSandCost) + // Coarse Sand
-                                 (wallArea * 0.01 * 0.5 * waterCost) + // Water
-                                 (wallArea * 0.1 * rebarCost) + // Rebar
-                                 (document.getElementById('wireMesh').checked ? wallArea * wireMeshCost : 0) + // Wire Mesh
-                                 (wallArea * 0.01 * 0.75 * fineSandCost) + // Fine Sand
-                                 (wallArea * 0.01 * 0.5 * gravelCost); // Gravel
-
-            const plasterSides = document.getElementById('plasterSides').value;
-            const plasterThickness = parseFloat(document.getElementById('plasterThickness').value) || 0;
-            const plasterArea = plasterSides === 'none' ? 0 : wallArea * (plasterSides === 'both' ? 2 : 1);
-            const plasterVolume = plasterArea * (plasterThickness / 1000);
-            const plasterCost = (plasterVolume * 0.25 / 0.025 * cementCost) + // Cement
-                               (plasterVolume * 0.75 * fineSandCost) + // Fine Sand
-                               (plasterVolume * 0.5 * waterCost) + // Water
-                               (document.getElementById('wireMesh').checked ? plasterArea * wireMeshCost : 0); // Wire Mesh
 
             const laborTotal = wallArea * laborCost;
             const contingencyCost = (materialCost + accessoryCost + plasterCost + laborTotal) * contingency;
