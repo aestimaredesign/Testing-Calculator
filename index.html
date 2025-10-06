@@ -860,22 +860,31 @@ function extractBOQDataForPDF(){
   return boq;
 }
 
-function exportToPDF(){
-  try{
+function exportToPDF() {
+  try {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit:'pt', format:'a4' }); // use points for more precise layout
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     doc.setFont('helvetica');
-
     const leftMargin = 40;
-    let y = 40;
+    const topMargin = 40;
+    let y = topMargin;
+
+    const pageHeight = doc.internal.pageSize.getHeight() - 60; // keep bottom margin
+
+    function checkPageSpace(linesNeeded = 60) {
+      if (y + linesNeeded > pageHeight) {
+        doc.addPage();
+        y = topMargin;
+      }
+    }
+
     doc.setFontSize(16);
-    doc.setFont(undefined,'bold');
+    doc.setFont(undefined, 'bold');
     doc.text("Sanitary & Storm Drain Report", leftMargin, y);
     doc.setFontSize(10);
-    doc.setFont(undefined,'normal');
+    doc.setFont(undefined, 'normal');
     y += 18;
 
-    // Project info top-left / right
     const projectName = document.getElementById('projectName').value || '';
     const clientName = document.getElementById('clientName').value || '';
     const projectLocation = document.getElementById('projectLocation').value || '';
@@ -891,48 +900,40 @@ function exportToPDF(){
     doc.text(`Prepared by: ${preparedBy}`, leftMargin, y);
     y += 16;
 
-    // (Removed: Sanitary Pipe Length & Storm Pipe Length lines per your request)
-
-    // Bill of Quantities Title
     doc.setFontSize(12);
-    doc.setFont(undefined,'bold');
+    doc.setFont(undefined, 'bold');
     doc.text("Bill of Quantities", leftMargin, y);
-    doc.setFont(undefined,'normal');
+    doc.setFont(undefined, 'normal');
     y += 8;
 
-    // Prepare table data
     const boq = extractBOQDataForPDF();
-    const header = [["Description","Quantity","Unit","Unit Rate","Amount"]];
     doc.autoTable({
       startY: y,
-      head: header,
+      head: [["Description", "Quantity", "Unit", "Unit Rate", "Amount"]],
       body: boq.slice(1),
       theme: 'grid',
-      styles: { font: 'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
-      headStyles: { fillColor: [230,230,230], textColor: 0, halign:'center', fontStyle:'bold' },
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 0, halign: 'center', fontStyle: 'bold' },
       columnStyles: {
-        0: { cellWidth: 200, halign:'left' },
-        1: { cellWidth: 60, halign:'center' },
-        2: { cellWidth: 60, halign:'center' },
-        3: { cellWidth: 100, halign:'right' },
-        4: { cellWidth: 100, halign:'right' }
+        0: { cellWidth: 200, halign: 'left' },
+        1: { cellWidth: 60, halign: 'center' },
+        2: { cellWidth: 60, halign: 'center' },
+        3: { cellWidth: 100, halign: 'right' },
+        4: { cellWidth: 100, halign: 'right' },
       },
-      didParseCell: function(data){
-        const txt = (data.cell.raw||'').toString();
-        // Group titles as merged rows
-        if(txt === 'Materials' || txt === 'Labor' || txt === 'Summary'){
+      didParseCell: function (data) {
+        const txt = (data.cell.raw || '').toString();
+        if (["Materials", "Labor", "Summary"].includes(txt)) {
           data.cell.colSpan = 5;
-          data.cell.styles.halign = 'left';
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240,240,240];
+          data.cell.styles.fillColor = [240, 240, 240];
         }
-        if(txt.includes("TOTAL PROJECT COST")){
+        if (txt.includes("TOTAL PROJECT COST")) {
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [200,200,200];
+          data.cell.styles.fillColor = [200, 200, 200];
         }
       },
-      didDrawPage: function(data){
-        // page footer
+      didDrawPage: function (data) {
         const pageSize = doc.internal.pageSize;
         doc.setFontSize(9);
         doc.setTextColor(120);
@@ -940,70 +941,68 @@ function exportToPDF(){
       }
     });
 
-    // After table, add the summaries (Sanitary System Summary, Storm Drain Summary, Labor Requirements)
-    let posY = doc.autoTable.previous.finalY + 20;
+    y = doc.autoTable.previous.finalY + 20;
+
+    // ---- SANITARY SYSTEM SUMMARY ----
+    checkPageSpace(80);
     doc.setFontSize(12);
-    doc.setFont(undefined,'bold');
-    doc.text('Sanitary System Summary', leftMargin, posY);
-    doc.setFont(undefined,'normal');
-    posY += 14;
-    doc.text(`Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`, leftMargin, posY);
-    posY += 12;
-    // show in L/s (metric) by default; user units could be added if desired
-    const sanFlowDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(sanitaryResults.drainageLoad_Ls,2)} L/s` : `${formatNumber(sanitaryResults.drainageLoad_Ls*LS_TO_GPM,2)} gpm`;
-    doc.text(`Drainage Load: ${sanFlowDisplay}`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Pipe Size: ${sanitaryResults.pipeSize} mm`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Pipe Quantity: ${sanitaryResults.pipeQuantity} pcs`, leftMargin, posY);
-    posY += 12;
-    const sanLenDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(sanitaryResults.pipeLength_m,1)} m` : `${formatNumber(sanitaryResults.pipeLength_m*M_TO_FT,1)} ft`;
-    doc.text(`Pipe Length: ${sanLenDisplay}`, leftMargin, posY);
-    posY += 20;
+    doc.setFont(undefined, 'bold');
+    doc.text('Sanitary System Summary', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    y += 12;
+    doc.text(`Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`, leftMargin, y);
+    y += 12;
+    doc.text(`Drainage Load: ${formatNumber(sanitaryResults.drainageLoad_Ls, 2)} L/s`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Size: ${sanitaryResults.pipeSize} mm`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Quantity: ${sanitaryResults.pipeQuantity} pcs`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Length: ${formatNumber(sanitaryResults.pipeLength_m, 1)} m`, leftMargin, y);
+    y += 20;
 
-    doc.setFont(undefined,'bold');
-    doc.text('Storm Drain Summary', leftMargin, posY);
-    doc.setFont(undefined,'normal');
-    posY += 14;
-    const stormAreaDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.totalArea_m2,2)} m²` : `${formatNumber(stormResults.totalArea_m2*M2_TO_FT2,2)} ft²`;
-    doc.text(`Total Area: ${stormAreaDisplay}`, leftMargin, posY);
-    posY += 12;
-    const stormRunoffDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.runoff_Ls,2)} L/s` : `${formatNumber(stormResults.runoff_Ls*LS_TO_GPM,2)} gpm`;
-    doc.text(`Runoff: ${stormRunoffDisplay}`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Pipe Size: ${stormResults.pipeSize} mm`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Pipe Quantity: ${stormResults.pipeQuantity} pcs`, leftMargin, posY);
-    posY += 12;
-    const stormLenDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.pipeLength_m,1)} m` : `${formatNumber(stormResults.pipeLength_m*M_TO_FT,1)} ft`;
-    doc.text(`Pipe Length: ${stormLenDisplay}`, leftMargin, posY);
-    posY += 20;
+    // ---- STORM DRAIN SUMMARY ----
+    checkPageSpace(80);
+    doc.setFont(undefined, 'bold');
+    doc.text('Storm Drain Summary', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    y += 12;
+    doc.text(`Total Area: ${formatNumber(stormResults.totalArea_m2, 2)} m²`, leftMargin, y);
+    y += 12;
+    doc.text(`Runoff: ${formatNumber(stormResults.runoff_Ls, 2)} L/s`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Size: ${stormResults.pipeSize} mm`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Quantity: ${stormResults.pipeQuantity} pcs`, leftMargin, y);
+    y += 12;
+    doc.text(`Pipe Length: ${formatNumber(stormResults.pipeLength_m, 1)} m`, leftMargin, y);
+    y += 20;
 
-    doc.setFont(undefined,'bold');
-    doc.text('Labor Requirements', leftMargin, posY);
-    doc.setFont(undefined,'normal');
-    posY += 14;
-    doc.text(`Total Labor Hours: ${formatNumber(laborResults.totalLaborHours,1)} hrs`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Plumber Hours: ${formatNumber(laborResults.plumberHours,1)} hrs`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Helper Hours: ${formatNumber(laborResults.helperHours,1)} hrs`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Equivalent Man-Days (single worker): ${formatNumber(laborResults.totalLaborDays,2)} days`, leftMargin, posY);
-    posY += 12;
-    doc.text(`Total Labor Cost: ${formatCurrencyForPDF(laborResults.totalLaborCost)}`, leftMargin, posY);
-    posY += 12;
-    const prodLine = `Pipe laying: ${document.getElementById('productivityPipe').value} ${document.getElementById('productivityPipeUnit').textContent}; Manhole: ${document.getElementById('productivityManhole').value} ${document.getElementById('productivityManholeUnit').textContent}; Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`;
-    doc.text(`Productivity rates used: ${prodLine}`, leftMargin, posY, {maxWidth: 500, align: 'left'});
+    // ---- LABOR REQUIREMENTS ----
+    checkPageSpace(100);
+    doc.setFont(undefined, 'bold');
+    doc.text('Labor Requirements', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    y += 12;
+    doc.text(`Total Labor Hours: ${formatNumber(laborResults.totalLaborHours, 1)} hrs`, leftMargin, y);
+    y += 12;
+    doc.text(`Plumber Hours: ${formatNumber(laborResults.plumberHours, 1)} hrs`, leftMargin, y);
+    y += 12;
+    doc.text(`Helper Hours: ${formatNumber(laborResults.helperHours, 1)} hrs`, leftMargin, y);
+    y += 12;
+    doc.text(`Equivalent Man-Days: ${formatNumber(laborResults.totalLaborDays, 1)} days`, leftMargin, y);
+    y += 12;
+    doc.text(`Total Labor Cost: ${formatCurrencyForPDF(laborResults.totalLaborCost)}`, leftMargin, y);
+    y += 12;
+    doc.text(`Productivity Rate Used: Pipe ${document.getElementById('productivityPipe').value} m/day; Manhole ${document.getElementById('productivityManhole').value} units/day; Fitting ${document.getElementById('productivityFitting').value} pcs/day`, leftMargin, y, { maxWidth: 500 });
 
-    // Save file
-    const safeName = (document.getElementById('projectName').value||'project').replace(/[^a-z0-9]/gi,'_');
+    const safeName = (document.getElementById('projectName').value || 'project').replace(/[^a-z0-9]/gi, '_');
     doc.save(`${safeName}_Report.pdf`);
-  }catch(err){
-    console.error(err);
+  } catch (err) {
     alert('Error generating PDF: ' + err.message);
   }
 }
+
 
 /* -----------------------
   Excel export
