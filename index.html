@@ -1,829 +1,897 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sanitary & Storm Drain Calculator</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sanitary & Storm Drain Calculator — jsPDF Version</title>
 
-<!-- Bootstrap 5 -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<style>
-  body {
-    font-family: Helvetica, Arial, sans-serif;
-    background: #f8f9fa;
-    color: #212529;
-  }
-  h1,h2,h3,h4 { font-weight: 600; }
-  .tab-content { background: #fff; padding: 1rem 1.5rem; border: 1px solid #dee2e6; border-top: none; }
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-    gap: 1rem;
-  }
-  .disclaimer {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #000; /* black text as requested */
-    font-size: 0.9rem;
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-  }
-  input.error { border-color: #dc3545 !important; }
-  @media (max-width:768px){
-    .nav-tabs { flex-wrap: wrap; }
-    .tab-content { padding: 1rem; }
-  }
-</style>
+  <!-- jsPDF & autotable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS for Excel export (optional) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body { font-family: Helvetica, Arial, sans-serif; background:#f3f6f9; color:#111; padding-bottom:40px; }
+    .container { max-width:1100px; margin:18px auto; }
+    header { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:white; padding:18px; border-radius:8px; }
+    .disclaimer { background:#fff3cd; border:1px solid #ffeaa7; color:#000; padding:10px; border-radius:6px; margin-top:10px;}
+    .section { background:#fff; padding:16px; border-radius:8px; border:1px solid #e6eefc; margin-top:14px; }
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .unit-label { font-weight:600; margin-left:8px; }
+    .error { border-color:#dc3545 !important; box-shadow:0 0 0 0.15rem rgba(220,53,69,.08); }
+    .small-muted{ font-size:0.9rem; color:#6b7280; }
+    @media (max-width:600px){ header h1{ font-size:1.2rem } .form-grid{ grid-template-columns:1fr; } }
+  </style>
 </head>
+<body>
+  <div class="container" role="main">
+    <header class="d-flex align-items-center justify-content-between">
+      <div>
+        <h1 class="mb-0">Sanitary &amp; Storm Drain Calculator</h1>
+        <div class="small-muted">Quantity takeoff & labor estimate — Metric / Imperial</div>
+      </div>
+      <div class="text-end small-muted">Neutral • Universal • Browser-based</div>
+    </header>
 
-<body class="container py-4">
+    <div class="disclaimer" role="note" aria-live="polite">
+      <strong>Note:</strong> This calculator uses practical approximations. For formal design consult local codes and a licensed engineer.
+    </div>
 
-  <h1 class="mb-3 text-center">Sanitary &amp; Storm Drain Calculator</h1>
+    <!-- Controls row: units + save/load -->
+    <div class="section d-flex flex-wrap gap-2 align-items-center justify-content-between" aria-label="Project controls">
+      <div class="d-flex gap-2 align-items-center">
+        <label for="units" class="mb-0 me-2 fw-semibold">Measurement Units:</label>
+        <select id="units" class="form-select form-select-sm" style="width:180px" aria-label="Measurement Units">
+          <option value="metric" selected>Metric (m, mm, L/s)</option>
+          <option value="imperial">Imperial (ft, in, gpm)</option>
+        </select>
+      </div>
 
-  <!-- Unit Toggle -->
-  <div class="d-flex justify-content-end mb-3">
-    <label for="unitSystem" class="me-2 fw-semibold">Units:</label>
-    <select id="unitSystem" class="form-select w-auto">
-      <option value="metric" selected>Metric (m, mm, L/s)</option>
-      <option value="imperial">Imperial (ft, in, gpm)</option>
-    </select>
-  </div>
-
-  <!-- Navigation Tabs -->
-  <ul class="nav nav-tabs" id="calcTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" id="sanitary-tab" data-bs-toggle="tab" data-bs-target="#sanitary" role="tab">Sanitary System</button></li>
-    <li class="nav-item"><button class="nav-link" id="storm-tab" data-bs-toggle="tab" data-bs-target="#storm" role="tab">Storm Drain</button></li>
-    <li class="nav-item"><button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" role="tab">Labor &amp; Productivity</button></li>
-    <li class="nav-item"><button class="nav-link" id="report-tab" data-bs-toggle="tab" data-bs-target="#report" role="tab">Report / Output</button></li>
-  </ul>
-
-  <div class="tab-content" id="calcTabsContent">
-
-    <!-- ========== SANITARY SYSTEM TAB ========== -->
-    <div class="tab-pane fade show active" id="sanitary" role="tabpanel">
-      <h3>Sanitary System</h3>
-      <div class="form-grid">
-        <div>
-          <label class="form-label" for="sanPipeLength">Pipe Length</label>
-          <input type="number" id="sanPipeLength" class="form-control" aria-label="Sanitary pipe length" min="0" value="0">
-        </div>
-        <div>
-          <label class="form-label" for="sanPipeSize">Pipe Size (<span class="unit-length">mm</span>)</label>
-          <input type="number" id="sanPipeSize" class="form-control" aria-label="Sanitary pipe size" min="50" value="100">
-        </div>
-        <div>
-          <label class="form-label" for="sanSlope">Slope (%)</label>
-          <input type="number" id="sanSlope" class="form-control" aria-label="Sanitary slope" min="0.1" value="1">
-        </div>
-        <div>
-          <label class="form-label" for="sanMHCount">No. of Manholes</label>
-          <input type="number" id="sanMHCount" class="form-control" aria-label="Sanitary manhole count" min="0" value="0">
-        </div>
+      <div class="d-flex gap-2">
+        <button id="saveJSON" class="btn btn-outline-secondary btn-sm" aria-label="Save project to JSON">Save Project (JSON)</button>
+        <label class="btn btn-outline-secondary btn-sm mb-0" for="loadJSONInput" role="button">Load Project (JSON)</label>
+        <input id="loadJSONInput" type="file" accept=".json,application/json" style="display:none" aria-hidden="true">
+        <button id="resetBtn" class="btn btn-outline-danger btn-sm">Reset</button>
       </div>
     </div>
 
-    <!-- ========== STORM DRAIN TAB ========== -->
-    <div class="tab-pane fade" id="storm" role="tabpanel">
-      <h3>Storm Drain System</h3>
-      <div class="form-grid">
-        <div>
-          <label class="form-label" for="catchmentArea">Catchment Area (<span class="unit-area">m²</span>)</label>
-          <input type="number" id="catchmentArea" class="form-control" aria-label="Catchment area" min="0" value="0">
-        </div>
-        <div>
-          <label class="form-label" for="rainIntensity">Rainfall Intensity (<span class="unit-rain">mm/hr</span>)</label>
-          <input type="number" id="rainIntensity" class="form-control" aria-label="Rainfall intensity" min="0" value="0">
-        </div>
-        <div>
-          <label class="form-label" for="runoffCoeff">Runoff Coefficient (C)</label>
-          <input type="number" id="runoffCoeff" class="form-control" aria-label="Runoff coefficient" min="0" max="1" step="0.05" value="0.8">
-        </div>
-        <div>
-          <label class="form-label" for="stormPipeSize">Pipe Size (<span class="unit-length">mm</span>)</label>
-          <input type="number" id="stormPipeSize" class="form-control" aria-label="Storm pipe size" min="50" value="150">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mt-3" id="mainTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" id="tab-project" data-bs-toggle="tab" data-bs-target="#pane-project" type="button" role="tab">Project</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-sanitary" data-bs-toggle="tab" data-bs-target="#pane-sanitary" type="button" role="tab">Sanitary</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-storm" data-bs-toggle="tab" data-bs-target="#pane-storm" type="button" role="tab">Storm</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-costs" data-bs-toggle="tab" data-bs-target="#pane-costs" type="button" role="tab">Costs & Labor</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-summary" data-bs-toggle="tab" data-bs-target="#pane-summary" type="button" role="tab">Summary & PDF</button></li>
+    </ul>
+
+    <div class="tab-content" id="tabContent" style="min-height:220px;">
+      <!-- PROJECT -->
+      <div class="tab-pane fade show active section" id="pane-project" role="tabpanel" aria-labelledby="tab-project">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="projectName">Project Name</label>
+            <input id="projectName" class="form-control" aria-label="Project Name" value="Residential Project">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="clientName">Client</label>
+            <input id="clientName" class="form-control" aria-label="Client Name" value="Client">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="preparedBy">Prepared By</label>
+            <input id="preparedBy" class="form-control" aria-label="Prepared By" value="Estimator">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="currency">Currency</label>
+            <select id="currency" class="form-select" aria-label="Currency">
+              <option value="PHP" selected>PHP (₱)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="JPY">JPY (¥)</option>
+            </select>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========== LABOR & PRODUCTIVITY TAB ========== -->
-    <div class="tab-pane fade" id="labor" role="tabpanel">
-      <h3>Labor &amp; Productivity</h3>
-      <div class="form-grid">
-        <div>
-          <label class="form-label" for="numPlumbers">Plumbers</label>
-          <input type="number" id="numPlumbers" class="form-control" min="0" value="2">
+      <!-- SANITARY -->
+      <div class="tab-pane fade section" id="pane-sanitary" role="tabpanel" aria-labelledby="tab-sanitary">
+        <h5>Sanitary System</h5>
+        <div class="form-grid" role="group" aria-label="Sanitary inputs">
+          <div>
+            <label class="form-label" for="sanLength">Total developed length</label>
+            <div class="input-group">
+              <input id="sanLength" type="number" class="form-control" min="0" step="0.1" aria-label="Sanitary total developed length" value="50">
+              <span class="input-group-text unit-length">m</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="sanPipeSize">Selected pipe size</label>
+            <div class="input-group">
+              <input id="sanPipeSize" type="number" class="form-control" min="25" aria-label="Sanitary pipe size" value="100">
+              <span class="input-group-text unit-size">mm</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="sanPipeLength">Commercial pipe length</label>
+            <select id="sanPipeLength" class="form-select" aria-label="Commercial pipe length">
+              <option value="3">3 m</option>
+              <option value="6" selected>6 m</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="sanSlope">Pipe slope (%)</label>
+            <input id="sanSlope" type="number" class="form-control" min="0.1" step="0.1" value="2" aria-label="Sanitary pipe slope">
+          </div>
+          <div>
+            <label class="form-label" for="wc">Water Closets</label>
+            <input id="wc" type="number" class="form-control" min="0" value="2" aria-label="Water Closets">
+          </div>
+          <div>
+            <label class="form-label" for="lav">Lavatories</label>
+            <input id="lav" type="number" class="form-control" min="0" value="2" aria-label="Lavatories">
+          </div>
+          <div>
+            <label class="form-label" for="sink">Kitchen sinks</label>
+            <input id="sink" type="number" class="form-control" min="0" value="1" aria-label="Kitchen sinks">
+          </div>
+          <div>
+            <label class="form-label" for="floorDrain">Floor drains</label>
+            <input id="floorDrain" type="number" class="form-control" min="0" value="2" aria-label="Floor drains">
+          </div>
         </div>
-        <div>
-          <label class="form-label" for="numHelpers">Helpers</label>
-          <input type="number" id="numHelpers" class="form-control" min="0" value="2">
+
+        <div class="mt-3 d-flex gap-2">
+          <button id="calcSan" class="btn btn-primary btn-sm">Calculate Sanitary</button>
+          <div id="sanMsg" class="align-self-center small text-muted"></div>
         </div>
-        <div>
-          <label class="form-label" for="prodPipeLaying">Pipe Laying Productivity (<span class="unit-prod">m/day</span>)</label>
-          <input type="number" id="prodPipeLaying" class="form-control" min="0.1" value="10">
+
+        <div id="sanitaryOutput" class="mt-3" aria-live="polite"></div>
+      </div>
+
+      <!-- STORM -->
+      <div class="tab-pane fade section" id="pane-storm" role="tabpanel" aria-labelledby="tab-storm">
+        <h5>Storm Drain System</h5>
+        <div class="form-grid" role="group" aria-label="Storm inputs">
+          <div>
+            <label class="form-label" for="roofArea">Roof area</label>
+            <div class="input-group">
+              <input id="roofArea" type="number" class="form-control" min="0" step="0.1" aria-label="Roof area" value="200">
+              <span class="input-group-text unit-area">m²</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="pavementArea">Pavement area</label>
+            <div class="input-group">
+              <input id="pavementArea" type="number" class="form-control" min="0" step="0.1" aria-label="Pavement area" value="0">
+              <span class="input-group-text unit-area">m²</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="coef">Runoff coefficient (C)</label>
+            <input id="coef" type="number" class="form-control" min="0" max="1" step="0.05" aria-label="Runoff coefficient" value="0.9">
+          </div>
+          <div>
+            <label class="form-label" for="intensity">Rainfall intensity</label>
+            <div class="input-group">
+              <input id="intensity" type="number" class="form-control" min="0" step="0.1" aria-label="Rainfall intensity" value="50">
+              <span class="input-group-text unit-rain">mm/hr</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="stormLength">Total developed length</label>
+            <div class="input-group">
+              <input id="stormLength" type="number" class="form-control" min="0" step="0.1" aria-label="Storm developed length" value="60">
+              <span class="input-group-text unit-length">m</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="stormPipeSize">Selected pipe size</label>
+            <div class="input-group">
+              <input id="stormPipeSize" type="number" class="form-control" min="25" aria-label="Storm pipe size" value="150">
+              <span class="input-group-text unit-size">mm</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="form-label" for="prodManhole">Manhole Installation Productivity (units/day)</label>
-          <input type="number" id="prodManhole" class="form-control" min="0.1" value="0.8">
+
+        <div class="mt-3 d-flex gap-2">
+          <button id="calcStorm" class="btn btn-primary btn-sm">Calculate Storm</button>
+          <div id="stormMsg" class="align-self-center small text-muted"></div>
+        </div>
+
+        <div id="stormOutput" class="mt-3" aria-live="polite"></div>
+      </div>
+
+      <!-- COSTS & LABOR -->
+      <div class="tab-pane fade section" id="pane-costs" role="tabpanel" aria-labelledby="tab-costs">
+        <h5>Costs & Labor</h5>
+        <div class="form-grid" role="group" aria-label="Costs and labor">
+          <div>
+            <label class="form-label" for="plumberRate">Plumber hourly rate</label>
+            <input id="plumberRate" type="number" class="form-control" min="0" step="0.1" value="80" aria-label="Plumber hourly rate">
+          </div>
+          <div>
+            <label class="form-label" for="helperRate">Helper hourly rate</label>
+            <input id="helperRate" type="number" class="form-control" min="0" step="0.1" value="50" aria-label="Helper hourly rate">
+          </div>
+          <div>
+            <label class="form-label" for="numPlumbers">Number of plumbers</label>
+            <input id="numPlumbers" type="number" class="form-control" min="1" value="2" aria-label="Number of plumbers">
+          </div>
+          <div>
+            <label class="form-label" for="numHelpers">Number of helpers</label>
+            <input id="numHelpers" type="number" class="form-control" min="0" value="2" aria-label="Number of helpers">
+          </div>
+
+          <div>
+            <label class="form-label" for="dailyHours">Daily work hours</label>
+            <input id="dailyHours" type="number" class="form-control" min="1" max="12" value="8" aria-label="Daily work hours">
+          </div>
+          <div>
+            <label class="form-label" for="productivityPipe">Pipe laying productivity</label>
+            <div class="input-group">
+              <input id="productivityPipe" type="number" class="form-control" min="0.01" step="0.1" value="10" aria-label="Pipe laying productivity">
+              <span class="input-group-text unit-prod">m/day</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="productivityManhole">Manhole installation productivity</label>
+            <div>
+              <input id="productivityManhole" type="number" class="form-control" min="0.01" step="0.1" value="0.8" aria-label="Manhole installation productivity">
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="productivityFitting">Fitting installation productivity</label>
+            <div>
+              <input id="productivityFitting" type="number" class="form-control" min="0.01" step="0.1" value="20" aria-label="Fitting installation productivity">
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label" for="wasteFactor">Waste factor (%)</label>
+            <input id="wasteFactor" type="number" class="form-control" min="0" max="50" value="5" aria-label="Waste factor">
+          </div>
+          <div>
+            <label class="form-label" for="overhead">Overhead (%)</label>
+            <input id="overhead" type="number" class="form-control" min="0" max="50" value="15" aria-label="Overhead">
+          </div>
+          <div>
+            <label class="form-label" for="profitMargin">Profit margin (%)</label>
+            <input id="profitMargin" type="number" class="form-control" min="0" max="50" value="10" aria-label="Profit margin">
+          </div>
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+          <button id="calcCosts" class="btn btn-primary btn-sm">Calculate Costs & Labor</button>
+          <div id="costsMsg" class="align-self-center small text-muted"></div>
+        </div>
+
+        <div id="costsOutput" class="mt-3" aria-live="polite"></div>
+      </div>
+
+      <!-- SUMMARY & PDF -->
+      <div class="tab-pane fade section" id="pane-summary" role="tabpanel" aria-labelledby="tab-summary">
+        <h5>Summary & Export</h5>
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <button id="generateSummary" class="btn btn-primary btn-sm">Generate Summary</button>
+          <button id="exportPDF" class="btn btn-outline-primary btn-sm">Export PDF (jsPDF)</button>
+          <button id="exportExcel" class="btn btn-outline-secondary btn-sm">Export Excel</button>
+        </div>
+
+        <div id="summaryCards" class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 border rounded" id="projectSummary" aria-live="polite"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 border rounded" id="laborSummary" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <div class="p-3 border rounded" id="boqSummary" aria-live="polite"></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========== REPORT TAB ========== -->
-    <div class="tab-pane fade" id="report" role="tabpanel">
-      <h3>Report / Output</h3>
-      <div class="mb-3">
-        <button class="btn btn-primary me-2" id="generateReportBtn">Generate Report (PDF)</button>
-        <button class="btn btn-outline-success me-2" id="saveJSONBtn">Save Project (JSON)</button>
-        <label class="btn btn-outline-secondary mb-0">
-          Load Project (JSON)
-          <input type="file" id="loadJSONInput" accept=".json" hidden>
-        </label>
-      </div>
-      <div id="outputArea" class="border rounded p-3 bg-light small"></div>
-    </div>
-  </div>
+    </div> <!-- tab-content -->
 
-  <p class="disclaimer mt-4">
-    Note: This calculator uses practical approximations. For formal design consult local codes and a licensed engineer.
-  </p>
+  </div> <!-- container -->
 
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-/* -----------------------
-  Part 2 - JavaScript Core
+/* -----------------------------
+  Embedded JavaScript (single-file)
   - Validation
-  - Unit conversion & labels
-  - Lazy calculations (caching & dirty flags)
-  - Save/Load JSON
-  - Keyboard navigation for tabs
--------------------------*/
+  - Unit conversion (metric/imperial)
+  - Lazy calculation caches
+  - JSON save/load
+  - jsPDF export (styled)
+  - Accessibility helpers
+------------------------------*/
 
-/* --- Helpers & Constants --- */
-const MM_PER_IN = 25.4;
+/* --- Constants & helpers --- */
 const M_TO_FT = 3.28084;
 const M2_TO_FT2 = 10.76391041671;
+const MM_PER_IN = 25.4;
 const LS_TO_GPM = 15.85032314;
-const IN_TO_MM = 25.4; // same as MM_PER_IN
 
-const qs = (s, el = document) => el.querySelector(s);
-const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+const $ = id => document.getElementById(id);
+const qsa = sel => Array.from(document.querySelectorAll(sel));
 
-function clampMin(value, min=0){
-  if (isNaN(value)) return min;
-  return Math.max(min, value);
+function round(v, dp=3){ return Math.round((v+Number.EPSILON)*Math.pow(10,dp))/Math.pow(10,dp); }
+function fmt(n, dp=2){ if(isNaN(n) || n===null) return ''; return round(n, dp).toLocaleString(); }
+function currencySymbol(){
+  const c = $('currency').value;
+  return c === 'PHP' ? '₱' : (c === 'USD' ? '$' : (c === 'EUR' ? '€' : '¥'));
 }
-function round(v, dp=3){ return Math.round((v+Number.EPSILON)*Math.pow(10, dp))/Math.pow(10, dp); }
-function fmt(n, dp=2){ if (n===null || n===undefined || isNaN(n)) return ''; return round(n, dp).toLocaleString(); }
+function formatCurrency(n){ return currencySymbol() + ' ' + fmt(n,2); }
 
-/* --- DOM references (broad) --- */
-const unitSystemEl = document.getElementById('unitSystem');
-const outputArea = document.getElementById('outputArea');
+/* --- Cached result objects & dirty flags (lazy) --- */
+let sanitaryResults = null;
+let stormResults = null;
+let costResults = null;
+let laborResults = null;
+let dirty = { sanitary:true, storm:true, costs:true };
 
-/* Inputs (sanitary) */
-const sanPipeLengthEl = document.getElementById('sanPipeLength');
-const sanPipeSizeEl = document.getElementById('sanPipeSize');
-const sanSlopeEl = document.getElementById('sanSlope');
-const sanMHCountEl = document.getElementById('sanMHCount');
-
-/* Inputs (storm) */
-const catchmentAreaEl = document.getElementById('catchmentArea');
-const rainIntensityEl = document.getElementById('rainIntensity');
-const runoffCoeffEl = document.getElementById('runoffCoeff');
-const stormPipeSizeEl = document.getElementById('stormPipeSize');
-
-/* Inputs (labor) */
-const numPlumbersEl = document.getElementById('numPlumbers');
-const numHelpersEl = document.getElementById('numHelpers');
-const prodPipeLayingEl = document.getElementById('prodPipeLaying');
-const prodManholeEl = document.getElementById('prodManhole');
-
-/* Controls */
-const generateReportBtn = document.getElementById('generateReportBtn');
-const saveJSONBtn = document.getElementById('saveJSONBtn');
-const loadJSONInput = document.getElementById('loadJSONInput');
-
-/* Unit label spans */
-const unitLengthSpans = qsa('.unit-length');
-const unitAreaSpans = qsa('.unit-area');
-const unitRainSpans = qsa('.unit-rain');
-const unitProdSpans = qsa('.unit-prod');
-
-/* --- Validation & Error UI --- */
-function setError(inputEl, msg){
-  inputEl.classList.add('error');
-  inputEl.setAttribute('aria-invalid','true');
-  if(msg){
-    inputEl.title = msg;
-  }
+/* --- Utility: validation helpers --- */
+function setError(el, msg){
+  el.classList.add('error'); el.setAttribute('aria-invalid','true'); el.title = msg || '';
 }
-function clearError(inputEl){
-  inputEl.classList.remove('error');
-  inputEl.removeAttribute('aria-invalid');
-  inputEl.title = '';
+function clearError(el){ el.classList.remove('error'); el.removeAttribute('aria-invalid'); el.title = ''; }
+function validateNonNegative(el){
+  const v = parseFloat(el.value);
+  if(isNaN(v) || v < 0){ setError(el, 'Enter zero or positive number'); return false; }
+  clearError(el); return true;
 }
-function validateNonNegative(inputEl){
-  const v = parseFloat(inputEl.value);
-  if(isNaN(v) || v < 0){
-    setError(inputEl, 'Value must be zero or positive.');
-    return false;
-  }
-  clearError(inputEl);
-  return true;
+
+/* --- Unit label updates --- */
+function setUnitLabels(){
+  const units = $('units').value;
+  const len = units === 'metric' ? 'm' : 'ft';
+  const area = units === 'metric' ? 'm²' : 'ft²';
+  const rain = units === 'metric' ? 'mm/hr' : 'in/hr';
+  qsa('.unit-length').forEach(s=>s.textContent = len);
+  qsa('.unit-area').forEach(s=>s.textContent = area);
+  qsa('.unit-rain').forEach(s=>s.textContent = rain);
+  qsa('.unit-size').forEach(s=> s.textContent = units === 'metric' ? 'mm' : 'in');
+  qsa('.unit-prod').forEach(s=> s.textContent = units === 'metric' ? 'm/day' : 'ft/day');
 }
-/* Validate all numeric inputs that matter */
-function validateAll(){
-  const inputs = [sanPipeLengthEl, sanPipeSizeEl, sanSlopeEl, sanMHCountEl,
-    catchmentAreaEl, rainIntensityEl, runoffCoeffEl, stormPipeSizeEl,
-    numPlumbersEl, numHelpersEl, prodPipeLayingEl, prodManholeEl];
-  let ok = true;
-  inputs.forEach(inp=>{
-    if(!validateNonNegative(inp)) ok = false;
-  });
-  // runoffCoeff should be between 0 and 1
-  const c = parseFloat(runoffCoeffEl.value);
-  if(isNaN(c) || c < 0 || c > 1){
-    setError(runoffCoeffEl, 'Runoff coefficient must be between 0 and 1.');
-    ok = false;
+setUnitLabels();
+
+/* --- Convert visible inputs when switching units --- */
+let lastUnits = $('units').value;
+$('units').addEventListener('change', ()=>{
+  const from = lastUnits, to = $('units').value;
+  convertVisibleValues(from,to);
+  lastUnits = to;
+  setUnitLabels();
+  markAllDirty();
+});
+
+/* Convert visible input values (not internal caches) */
+function convertVisibleValues(from, to){
+  if(from === to) return;
+  // convert length fields
+  if(from === 'metric' && to === 'imperial'){
+    // lengths (m -> ft)
+    $('sanLength').value = round((parseFloat($('sanLength').value||0) * M_TO_FT),3);
+    $('stormLength').value = round((parseFloat($('stormLength').value||0) * M_TO_FT),3);
+    // areas
+    $('roofArea').value = round((parseFloat($('roofArea').value||0) * M2_TO_FT2),3);
+    $('pavementArea').value = round((parseFloat($('pavementArea').value||0) * M2_TO_FT2),3);
+    // rainfall mm -> in
+    $('intensity').value = round((parseFloat($('intensity').value||0) / MM_PER_IN),3);
+    // productivities m/day -> ft/day
+    $('productivityPipe').value = round((parseFloat($('productivityPipe').value||0) * M_TO_FT),3);
+    // pipe sizes mm -> in
+    $('sanPipeSize').value = round((parseFloat($('sanPipeSize').value||0) / MM_PER_IN),2);
+    $('stormPipeSize').value = round((parseFloat($('stormPipeSize').value||0) / MM_PER_IN),2);
   } else {
-    clearError(runoffCoeffEl);
+    // imperial -> metric
+    $('sanLength').value = round((parseFloat($('sanLength').value||0) / M_TO_FT),3);
+    $('stormLength').value = round((parseFloat($('stormLength').value||0) / M_TO_FT),3);
+    $('roofArea').value = round((parseFloat($('roofArea').value||0) / M2_TO_FT2),3);
+    $('pavementArea').value = round((parseFloat($('pavementArea').value||0) / M2_TO_FT2),3);
+    $('intensity').value = round((parseFloat($('intensity').value||0) * MM_PER_IN),3);
+    $('productivityPipe').value = round((parseFloat($('productivityPipe').value||0) / M_TO_FT),3);
+    $('sanPipeSize').value = round((parseFloat($('sanPipeSize').value||0) * MM_PER_IN),0);
+    $('stormPipeSize').value = round((parseFloat($('stormPipeSize').value||0) * MM_PER_IN),0);
   }
-  return ok;
 }
 
-/* --- Unit system handling & conversions --- */
-let lastUnitSystem = unitSystemEl.value || 'metric';
+/* --- Mark dirty / clear caches --- */
+function markDirty(section){ dirty[section]=true; }
+function markAllDirty(){ Object.keys(dirty).forEach(k=>dirty[k]=true); }
+function clearCaches(){ sanitaryResults = stormResults = costResults = laborResults = null; markAllDirty(); }
 
-function updateUnitLabels(){
-  const units = unitSystemEl.value;
-  const lengthLabel = units === 'metric' ? 'm' : 'ft';
-  const areaLabel = units === 'metric' ? 'm²' : 'ft²';
-  const rainLabel = units === 'metric' ? 'mm/hr' : 'in/hr';
-  const prodLabel = units === 'metric' ? 'm/day' : 'ft/day';
-  unitLengthSpans.forEach(s=>s.textContent = units === 'metric' ? 'mm' : 'in'); // pipe size label is mm/in
-  unitAreaSpans.forEach(s=>s.textContent = areaLabel);
-  unitRainSpans.forEach(s=>s.textContent = rainLabel);
-  unitProdSpans.forEach(s=>s.textContent = prodLabel);
-  // also adjust textual unit spans inside form labels where needed
-}
-
-/* Convert visible numeric inputs from one unit system to another (metric <-> imperial)
-   Keep internal calculations in metric base where necessary.
-*/
-function convertVisibleValues(fromUnits, toUnits){
-  if(fromUnits === toUnits) return;
-  // lengths: sanPipeLength (m <-> ft)
-  if(fromUnits === 'metric' && toUnits === 'imperial'){
-    sanPipeLengthEl.value = round((parseFloat(sanPipeLengthEl.value||0) * M_TO_FT), 3);
-    catchmentAreaEl.value = round((parseFloat(catchmentAreaEl.value||0) * M2_TO_FT2), 3);
-    rainIntensityEl.value = round((parseFloat(rainIntensityEl.value||0) * (1/25.4)), 3); // mm/hr -> in/hr
-    // productivities: m/day -> ft/day
-    prodPipeLayingEl.value = round((parseFloat(prodPipeLayingEl.value||0) * M_TO_FT), 3);
-    // pipe sizes: mm -> in (display as inches)
-    sanPipeSizeEl.value = round((parseFloat(sanPipeSizeEl.value||0) / MM_PER_IN), 2);
-    stormPipeSizeEl.value = round((parseFloat(stormPipeSizeEl.value||0) / MM_PER_IN), 2);
-  } else if(fromUnits === 'imperial' && toUnits === 'metric'){
-    sanPipeLengthEl.value = round((parseFloat(sanPipeLengthEl.value||0) / M_TO_FT), 3);
-    catchmentAreaEl.value = round((parseFloat(catchmentAreaEl.value||0) / M2_TO_FT2), 3);
-    rainIntensityEl.value = round((parseFloat(rainIntensityEl.value||0) * 25.4), 3); // in/hr -> mm/hr
-    // productivities: ft/day -> m/day
-    prodPipeLayingEl.value = round((parseFloat(prodPipeLayingEl.value||0) / M_TO_FT), 3);
-    // pipe sizes: in -> mm
-    sanPipeSizeEl.value = round((parseFloat(sanPipeSizeEl.value||0) * MM_PER_IN), 0);
-    stormPipeSizeEl.value = round((parseFloat(stormPipeSizeEl.value||0) * MM_PER_IN), 0);
-  }
-  updateUnitLabels();
-}
-
-/* Update lastUnitSystem and perform conversion */
-unitSystemEl.addEventListener('change', ()=>{
-  const newUnits = unitSystemEl.value;
-  convertVisibleValues(lastUnitSystem, newUnits);
-  lastUnitSystem = newUnits;
-  markAllDirty(); // unit change affects caches
-});
-
-/* --- Caching & Lazy Calculation --- */
-let sanitaryCache = null;
-let stormCache = null;
-let laborCache = null;
-let dirty = { sanitary: true, storm: true, labor: true };
-
-function markDirty(section){
-  dirty[section] = true;
-}
-function markAllDirty(){
-  Object.keys(dirty).forEach(k => dirty[k] = true);
-}
-function clearCache(section){
-  if(section === 'sanitary') sanitaryCache = null;
-  if(section === 'storm') stormCache = null;
-  if(section === 'labor') laborCache = null;
-  dirty[section] = true;
-}
-
-/* Attach change listeners to mark dirty & validate - avoid recalculating immediately (lazy) */
-const inputsToWatch = [
-  sanPipeLengthEl, sanPipeSizeEl, sanSlopeEl, sanMHCountEl,
-  catchmentAreaEl, rainIntensityEl, runoffCoeffEl, stormPipeSizeEl,
-  numPlumbersEl, numHelpersEl, prodPipeLayingEl, prodManholeEl
+/* Attach input events to mark dirty and validate */
+const watchInputs = [
+  'sanLength','sanPipeSize','sanSlope','sanPipeLength','wc','lav','sink','floorDrain',
+  'roofArea','pavementArea','coef','intensity','stormLength','stormPipeSize',
+  'plumberRate','helperRate','numPlumbers','numHelpers','dailyHours','productivityPipe','productivityManhole','productivityFitting','wasteFactor','overhead','profitMargin'
 ];
-inputsToWatch.forEach(inp=>{
-  inp.addEventListener('input', ()=>{
-    // basic clamp and validation
-    const v = parseFloat(inp.value);
-    if(!isNaN(v) && v < 0){
-      setError(inp, 'Value cannot be negative.');
+watchInputs.forEach(id=>{
+  const el = $(id);
+  if(!el) return;
+  el.addEventListener('input', ()=> {
+    // basic non-negative validation except for those with special ranges
+    if(['coef'].includes(id)){
+      const v = parseFloat(el.value);
+      if(isNaN(v) || v<0 || v>1) setError(el,'Enter 0 to 1');
+      else clearError(el);
     } else {
-      clearError(inp);
+      if(el.type === 'number') validateNonNegative(el);
     }
-    // mark appropriate section dirty
-    if([sanPipeLengthEl, sanPipeSizeEl, sanSlopeEl, sanMHCountEl].includes(inp)) markDirty('sanitary');
-    if([catchmentAreaEl, rainIntensityEl, runoffCoeffEl, stormPipeSizeEl].includes(inp)) markDirty('storm');
-    if([numPlumbersEl, numHelpersEl, prodPipeLayingEl, prodManholeEl].includes(inp)) markDirty('labor');
+    // mark relevant section dirty
+    if(['sanLength','sanPipeSize','sanSlope','sanPipeLength','wc','lav','sink','floorDrain'].includes(id)) markDirty('sanitary');
+    if(['roofArea','pavementArea','coef','intensity','stormLength','stormPipeSize'].includes(id)) markDirty('storm');
+    if(['plumberRate','helperRate','numPlumbers','numHelpers','dailyHours','productivityPipe','productivityManhole','productivityFitting'].includes(id)) markDirty('costs');
   });
 });
 
-/* --- Calculation functions (metric internal) --- */
+/* --- Calculation functions (internal in metric) --- */
 
-/* Sanitry calculations (internal metric)
-   Returns object:
-   { pipeLength_m, pipeSize_mm, manholes, fittings, totalFixtureUnits (if expanded later), ... }
-*/
+/* Sanitary */
 function calculateSanitary(force=false){
-  if(!force && !dirty.sanitary && sanitaryCache) return sanitaryCache;
+  if(!force && !dirty.sanitary && sanitaryResults) return sanitaryResults;
   // validation
-  if(!validateNonNegative(sanPipeLengthEl) || !validateNonNegative(sanPipeSizeEl) || !validateNonNegative(sanMHCountEl)) {
-    outputArea.innerHTML = '<div class="text-danger">Please correct highlighted inputs in Sanitary tab.</div>';
-    throw new Error('Sanitary validation failed');
+  const inputs = ['sanLength','sanPipeSize','sanSlope','wc','lav','sink','floorDrain'];
+  for(const id of inputs){ if(!validateNonNegative($(id))) { $('sanMsg').textContent = 'Fix inputs'; return null; } }
+  $('sanMsg').textContent = '';
+  let length = parseFloat($('sanLength').value) || 0;
+  let pipeSize = parseFloat($('sanPipeSize').value) || 0;
+  const units = $('units').value;
+  if(units === 'imperial'){ // displayed size in inches -> convert to mm; length in ft -> m
+    pipeSize = round(pipeSize * MM_PER_IN, 0);
+    length = round(length / M_TO_FT, 3);
   }
-
-  const units = unitSystemEl.value;
-  let pipeLength_m = parseFloat(sanPipeLengthEl.value) || 0;
-  let pipeSize_mm = parseFloat(sanPipeSizeEl.value) || 0;
-  // if currently in imperial, displayed pipe size is in inches -> convert to mm
-  if(units === 'imperial'){
-    pipeSize_mm = round(pipeSize_mm * MM_PER_IN, 0);
-  }
-
-  // simple accessory heuristics
-  const manholes = clampMin(Math.round(parseFloat(sanMHCountEl.value)||0), 0);
-  const fittings = Math.max(1, Math.ceil((pipeLength_m || 0) / 10)); // arbitrary
-  sanitaryCache = { pipeLength_m, pipeSize_mm, manholes, fittings };
+  const pipeLenSection = parseFloat($('sanPipeLength').value) || 6;
+  const pipeQty = Math.ceil(length / pipeLenSection);
+  // fixture units simplified
+  const totalFU = (parseInt($('wc').value)||0)*6 + (parseInt($('lav').value)||0)*1 + (parseInt($('sink').value)||0)*2 + (parseInt($('floorDrain').value)||0)*2;
+  const drainage_Ls = totalFU * 0.8; // internal L/s
+  const manholes = Math.ceil(length / 50);
+  const fittings = Math.ceil(length / 10);
+  sanitaryResults = { pipeLength_m: length, pipeSize_mm: pipeSize, pipeQty, totalFU, drainage_Ls, manholes, fittings };
   dirty.sanitary = false;
-  return sanitaryCache;
+  return sanitaryResults;
 }
 
-/* Storm calculations (metric internal)
-   Returns object:
-   { catchmentArea_m2, runoff_Ls, pipeSize_mm, catchBasins, manholes, fittings }
-*/
+/* Storm */
 function calculateStorm(force=false){
-  if(!force && !dirty.storm && stormCache) return stormCache;
-  if(!validateNonNegative(catchmentAreaEl) || !validateNonNegative(rainIntensityEl) || !validateNonNegative(stormPipeSizeEl)) {
-    outputArea.innerHTML = '<div class="text-danger">Please correct highlighted inputs in Storm tab.</div>';
-    throw new Error('Storm validation failed');
-  }
-  const units = unitSystemEl.value;
-  let area_m2 = parseFloat(catchmentAreaEl.value) || 0;
-  let intensity_mm = parseFloat(rainIntensityEl.value) || 0;
-  let pipeSize_mm = parseFloat(stormPipeSizeEl.value) || 0;
+  if(!force && !dirty.storm && stormResults) return stormResults;
+  const inputs = ['roofArea','pavementArea','coef','intensity','stormLength','stormPipeSize'];
+  for(const id of inputs){ if(!validateNonNegative($(id))) { $('stormMsg').textContent = 'Fix inputs'; return null; } }
+  $('stormMsg').textContent = '';
+  const units = $('units').value;
+  let roof = parseFloat($('roofArea').value) || 0;
+  let pavement = parseFloat($('pavementArea').value) || 0;
+  let intensity = parseFloat($('intensity').value) || 0;
+  let length = parseFloat($('stormLength').value) || 0;
+  let pipeSize = parseFloat($('stormPipeSize').value) || 0;
   if(units === 'imperial'){
-    area_m2 = round((area_m2 / M2_TO_FT2), 3);
-    intensity_mm = round((intensity_mm * 25.4), 3); // in/hr -> mm/hr
-    pipeSize_mm = round(pipeSize_mm * MM_PER_IN, 0); // in -> mm
+    roof = round(roof / M2_TO_FT2,3);
+    pavement = round(pavement / M2_TO_FT2,3);
+    intensity = round(intensity * MM_PER_IN,3); // in/hr -> mm/hr
+    length = round(length / M_TO_FT,3);
+    pipeSize = round(pipeSize * MM_PER_IN,0);
   }
-  const C = clampMin(parseFloat(runoffCoeffEl.value) || 0.8, 0);
-  // Rational method variant: Q (L/s) = C * I(mm/hr) * A(m2) / 360
-  const runoff_Ls = C * intensity_mm * area_m2 / 360;
-  const catchBasins = Math.ceil(area_m2 / 200); // heuristic
-  const manholes = Math.ceil(area_m2 / 500); // heuristic
-  const fittings = Math.max(1, Math.ceil(area_m2 / 100));
-  stormCache = { catchmentArea_m2: area_m2, runoff_Ls, pipeSize_mm, catchBasins, manholes, fittings, C, intensity_mm };
+  const area_m2 = roof + pavement;
+  const C = parseFloat($('coef').value) || 0.9;
+  const runoff_Ls = C * intensity * area_m2 / 360;
+  const catchBasins = Math.ceil(area_m2 / 200);
+  const manholes = Math.ceil(length / 50);
+  const fittings = Math.ceil(length / 10);
+  stormResults = { totalArea_m2: area_m2, coef: C, intensity_mm: intensity, runoff_Ls, pipeSize_mm: pipeSize, length_m: length, catchBasins, manholes, fittings };
   dirty.storm = false;
-  return stormCache;
+  return stormResults;
 }
 
-/* Labor calculations (use productivities; productivities input are in m/day when metric, ft/day if imperial)
-   Returns:
-   { pipeDays, manholeDays, totalDays, plumberHours, helperHours ... }
-*/
-function calculateLabor(force=false){
-  if(!force && !dirty.labor && laborCache) return laborCache;
-  if(!validateNonNegative(numPlumbersEl) || !validateNonNegative(numHelpersEl) || !validateNonNegative(prodPipeLayingEl) || !validateNonNegative(prodManholeEl)){
-    outputArea.innerHTML = '<div class="text-danger">Please correct highlighted inputs in Labor tab.</div>';
-    throw new Error('Labor validation failed');
-  }
+/* Costs & Labor */
+function calculateCosts(force=false){
+  if(!force && !dirty.costs && costResults && laborResults) return { costResults, laborResults };
+  // validate key fields
+  const numericCheck = ['plumberRate','helperRate','numPlumbers','numHelpers','dailyHours','productivityPipe','productivityManhole','productivityFitting','wasteFactor','overhead','profitMargin'];
+  for(const id of numericCheck) if(!validateNonNegative($(id))){ $('costsMsg').textContent = 'Fix inputs'; return null; }
+  $('costsMsg').textContent = '';
 
-  // Ensure we have the latest sanitary & storm caches (lazily compute them)
   const san = calculateSanitary();
   const storm = calculateStorm();
-  const units = unitSystemEl.value;
+  if(!san || !storm) return null;
 
-  // productivities -> convert to metric base (m/day)
-  let pipeProd = parseFloat(prodPipeLayingEl.value) || 1; // in m/day or ft/day
-  if(units === 'imperial') pipeProd = pipeProd / M_TO_FT; // ft/day -> m/day
-  let manholeProd = parseFloat(prodManholeEl.value) || 0.8; // units/day
+  const units = $('units').value;
+  let productivityPipe = parseFloat($('productivityPipe').value) || 1;
+  if(units === 'imperial') productivityPipe = productivityPipe / M_TO_FT; // ft/day -> m/day
+  const productivityManhole = parseFloat($('productivityManhole').value) || 0.8;
+  const productivityFitting = parseFloat($('productivityFitting').value) || 20;
 
-  const totalPipeLength_m = (san.pipeLength_m || 0);
-  const pipeDays = pipeProd > 0 ? totalPipeLength_m / pipeProd : 0;
-  const manholeDays = manholeProd > 0 ? (san.manholes + storm.manholes) / manholeProd : 0;
-  const totalDays = pipeDays + manholeDays;
-  const dailyHours = 8; // assume 8h shift; could be user configurable later
+  const totalPipe_m = (san.pipeLength_m || 0) + (storm.length_m || 0);
+  const pipeDays = productivityPipe > 0 ? totalPipe_m / productivityPipe : 0;
+  const manholeDays = productivityManhole > 0 ? (san.manholes + storm.manholes) / productivityManhole : 0;
+  const fittingDays = productivityFitting > 0 ? (san.fittings + storm.fittings) / productivityFitting : 0;
+  const totalDays = pipeDays + manholeDays + fittingDays;
+  const dailyHours = parseFloat($('dailyHours').value) || 8;
   const totalLaborHours = totalDays * dailyHours;
 
-  const numPlumbers = Math.max(1, parseInt(numPlumbersEl.value) || 1);
-  const numHelpers = Math.max(0, parseInt(numHelpersEl.value) || 0);
+  const numPlumbers = Math.max(1, parseInt($('numPlumbers').value)||1);
+  const numHelpers = Math.max(0, parseInt($('numHelpers').value)||0);
   const totalWorkers = numPlumbers + numHelpers;
   const plumberHours = totalLaborHours * (numPlumbers / totalWorkers);
   const helperHours = totalLaborHours * (numHelpers / totalWorkers);
 
-  laborCache = { pipeDays, manholeDays, totalDays, totalLaborHours, plumberHours, helperHours, numPlumbers, numHelpers, dailyHours };
-  dirty.labor = false;
-  return laborCache;
+  const plumberRate = parseFloat($('plumberRate').value)||0;
+  const helperRate = parseFloat($('helperRate').value)||0;
+  const plumberCost = plumberHours * plumberRate;
+  const helperCost = helperHours * helperRate;
+  const totalLaborCost = plumberCost + helperCost;
+
+  // minimal material costing placeholders (user can edit in UI extension - for now keep estimates)
+  const sanitaryPipeUnitCost = 0; // placeholder
+  const sanitaryMaterialCost = sanitaryPipeUnitCost * (san.pipeQty || 0);
+  const stormMaterialCost = 0;
+  const totalMaterialCost = sanitaryMaterialCost + stormMaterialCost;
+
+  const wasteFactor = parseFloat($('wasteFactor').value) || 0;
+  const overhead = parseFloat($('overhead').value) || 0;
+  const profit = parseFloat($('profitMargin').value) || 0;
+
+  const materialsWithWaste = totalMaterialCost * (1 + wasteFactor/100);
+  const subtotal = materialsWithWaste + totalLaborCost;
+  const withOverhead = subtotal * (1 + overhead/100);
+  const totalCost = withOverhead * (1 + profit/100);
+
+  costResults = { sanitaryMaterialCost, stormMaterialCost, totalMaterialCost, materialsWithWaste, subtotal, totalCost, totalLaborCost, plumberCost, helperCost };
+  laborResults = { pipeDays, manholeDays, fittingDays, totalDays, totalLaborHours, plumberHours, helperHours, numPlumbers, numHelpers };
+
+  dirty.costs = false;
+  return { costResults, laborResults };
 }
 
-/* --- Generate a compact HTML summary (for Report tab output area) --- */
-function buildReportPreview(){
-  try{
-    // Validate everything before building
-    if(!validateAll()){
-      outputArea.innerHTML = '<div class="text-danger">Validation errors exist. Please correct highlighted fields.</div>';
-      return;
-    }
+/* --- UI renderers --- */
+function renderSanitaryOutput(){
+  const s = calculateSanitary(true);
+  if(!s){ $('sanitaryOutput').innerHTML = '<div class="text-danger">Sanitary calculation failed.</div>'; return; }
+  const units = $('units').value;
+  const flowDisplay = units === 'metric' ? fmt(s.drainage_Ls,2) + ' L/s' : fmt(s.drainage_Ls * LS_TO_GPM,2) + ' gpm';
+  const sizeDisplay = units === 'metric' ? Math.round(s.pipeSize_mm) + ' mm' : (round(s.pipeSize_mm / MM_PER_IN,2)) + ' in';
+  $('sanitaryOutput').innerHTML = `<div><strong>Recommended pipe size:</strong> ${sizeDisplay}</div>
+    <div><strong>Pipe quantity:</strong> ${s.pipeQty} pcs</div>
+    <div><strong>Drainage load:</strong> ${flowDisplay}</div>
+    <div><strong>Manholes:</strong> ${s.manholes}</div>
+    <div><strong>Fittings (est.):</strong> ${s.fittings}</div>`;
+}
 
-    const san = calculateSanitary();
-    const storm = calculateStorm();
-    const labor = calculateLabor();
+function renderStormOutput(){
+  const s = calculateStorm(true);
+  if(!s){ $('stormOutput').innerHTML = '<div class="text-danger">Storm calculation failed.</div>'; return; }
+  const units = $('units').value;
+  const areaDisplay = units === 'metric' ? fmt(s.totalArea_m2,2) + ' m²' : fmt(s.totalArea_m2 * M2_TO_FT2,2) + ' ft²';
+  const runoffDisplay = units === 'metric' ? fmt(s.runoff_Ls,2) + ' L/s' : fmt(s.runoff_Ls * LS_TO_GPM,2) + ' gpm';
+  const sizeDisplay = units === 'metric' ? Math.round(s.pipeSize_mm) + ' mm' : (round(s.pipeSize_mm / MM_PER_IN,2)) + ' in';
+  $('stormOutput').innerHTML = `<div><strong>Total area:</strong> ${areaDisplay}</div>
+    <div><strong>Runoff:</strong> ${runoffDisplay}</div>
+    <div><strong>Pipe size selected:</strong> ${sizeDisplay}</div>
+    <div><strong>Catch basins:</strong> ${s.catchBasins}</div>
+    <div><strong>Manholes:</strong> ${s.manholes}</div>`;
+}
 
-    const units = unitSystemEl.value;
-    const flowDisplay = units === 'metric' ? `${fmt(storm.runoff_Ls,2)} L/s` : `${fmt(storm.runoff_Ls * LS_TO_GPM,2)} gpm`;
-    const sanSizeDisplay = units === 'metric' ? `${round(san.pipeSize_mm,0)} mm` : `${round(san.pipeSize_mm / MM_PER_IN,2)} in`;
-    const stormSizeDisplay = units === 'metric' ? `${round(storm.pipeSize_mm,0)} mm` : `${round(storm.pipeSize_mm / MM_PER_IN,2)} in`;
+function renderCostsOutput(){
+  const rv = calculateCosts(true);
+  if(!rv){ $('costsOutput').innerHTML = '<div class="text-danger">Costs calculation failed.</div>'; return; }
+  const cr = rv.costResults, lr = rv.laborResults;
+  $('costsOutput').innerHTML = `<div><strong>Total labor hours:</strong> ${fmt(lr.totalLaborHours,1)} hrs</div>
+    <div><strong>Plumber hours:</strong> ${fmt(lr.plumberHours,1)} hrs (${lr.numPlumbers} plumbers)</div>
+    <div><strong>Helper hours:</strong> ${fmt(lr.helperHours,1)} hrs (${lr.numHelpers} helpers)</div>
+    <div><strong>Estimated total cost:</strong> ${formatCurrency(cr.totalCost)}</div>`;
+}
 
-    let html = `<h5>Sanitary System Summary</h5>
-      <ul>
-        <li>Pipe Size: <strong>${sanSizeDisplay}</strong></li>
-        <li>Pipe Length: <strong>${fmt(san.pipeLength_m,2)} m</strong></li>
-        <li>Manholes: <strong>${san.manholes}</strong></li>
-        <li>Fittings (est.): <strong>${san.fittings}</strong></li>
-      </ul>
-
-      <h5>Storm Drain System Summary</h5>
-      <ul>
-        <li>Catchment Area: <strong>${fmt(storm.catchmentArea_m2,2)} m²</strong></li>
-        <li>Runoff: <strong>${flowDisplay}</strong></li>
-        <li>Pipe Size Selected: <strong>${stormSizeDisplay}</strong></li>
-        <li>Catch Basins: <strong>${storm.catchBasins}</strong></li>
-      </ul>
-
-      <h5>Labor Requirements</h5>
-      <ul>
-        <li>Total labor days (est.): <strong>${fmt(labor.totalDays,2)} days</strong></li>
-        <li>Total labor hours: <strong>${fmt(labor.totalLaborHours,1)} hrs</strong></li>
-        <li>Plumber hours: <strong>${fmt(labor.plumberHours,1)} hrs (${labor.numPlumbers} plumbers)</strong></li>
-        <li>Helper hours: <strong>${fmt(labor.helperHours,1)} hrs (${labor.numHelpers} helpers)</strong></li>
-      </ul>`;
-
-    outputArea.innerHTML = html;
-  } catch(err){
-    console.warn('Report preview generation failed:', err);
-    if(!outputArea.innerHTML) outputArea.innerHTML = '<div class="text-danger">Unable to build preview. Fix inputs and try again.</div>';
+function generateSummary(){
+  // ensure all calculations are current
+  calculateSanitary(true); calculateStorm(true); calculateCosts(true);
+  // Project summary
+  $('projectSummary').innerHTML = `<div><strong>Project:</strong> ${$('projectName').value}</div>
+    <div><strong>Client:</strong> ${$('clientName').value}</div>
+    <div><strong>Prepared by:</strong> ${$('preparedBy').value}</div>
+    <div><strong>Units:</strong> ${$('units').value}</div>`;
+  // Labor summary
+  if(laborResults){
+    $('laborSummary').innerHTML = `<div><strong>Total labor hours:</strong> ${fmt(laborResults.totalLaborHours,1)} hrs</div>
+      <div><strong>Plumber hours:</strong> ${fmt(laborResults.plumberHours,1)} hrs</div>
+      <div><strong>Helper hours:</strong> ${fmt(laborResults.helperHours,1)} hrs</div>`;
   }
+  // BOQ placeholder (material costs require unit prices which are not in core UI; present counts & quantities)
+  const san = sanitaryResults || calculateSanitary(true);
+  const storm = stormResults || calculateStorm(true);
+  let boqHtml = `<h6>Bill of Quantities (summary)</h6><table class="table table-sm">
+    <thead><tr><th>Item</th><th>Qty</th><th>Unit</th></tr></thead><tbody>`;
+  boqHtml += `<tr><td>Sanitary pipes (pieces)</td><td>${san.pipeQty}</td><td>pcs</td></tr>`;
+  boqHtml += `<tr><td>Sanitary manholes</td><td>${san.manholes}</td><td>pcs</td></tr>`;
+  boqHtml += `<tr><td>Storm catch basins</td><td>${storm.catchBasins}</td><td>pcs</td></tr>`;
+  boqHtml += `<tr><td>Storm manholes</td><td>${storm.manholes}</td><td>pcs</td></tr>`;
+  boqHtml += `<tr><td>Fittings (est.)</td><td>${san.fittings + storm.fittings}</td><td>pcs</td></tr>`;
+  boqHtml += `</tbody></table>`;
+  $('boqSummary').innerHTML = boqHtml;
 }
 
-/* --- Save / Load JSON (file) --- */
-function collectProjectData(){
-  // gather all form field values (string values so JSON is simple)
-  const data = {
-    meta: { units: unitSystemEl.value, savedAt: new Date().toISOString() },
+/* --- JSON Save/Load --- */
+function getProjectData(){
+  return {
+    meta: { units: $('units').value, savedAt: new Date().toISOString() },
+    project: { projectName: $('projectName').value, clientName: $('clientName').value, preparedBy: $('preparedBy').value, currency: $('currency').value },
     sanitary: {
-      pipeLength: sanPipeLengthEl.value,
-      pipeSize: sanPipeSizeEl.value,
-      slope: sanSlopeEl.value,
-      manholes: sanMHCountEl.value
+      sanLength: $('sanLength').value, sanPipeSize: $('sanPipeSize').value, sanPipeLength: $('sanPipeLength').value, sanSlope: $('sanSlope').value,
+      wc: $('wc').value, lav: $('lav').value, sink: $('sink').value, floorDrain: $('floorDrain').value
     },
     storm: {
-      area: catchmentAreaEl.value,
-      intensity: rainIntensityEl.value,
-      runoffCoeff: runoffCoeffEl.value,
-      pipeSize: stormPipeSizeEl.value
+      roofArea: $('roofArea').value, pavementArea: $('pavementArea').value, coef: $('coef').value, intensity: $('intensity').value,
+      stormLength: $('stormLength').value, stormPipeSize: $('stormPipeSize').value
     },
-    labor: {
-      numPlumbers: numPlumbersEl.value,
-      numHelpers: numHelpersEl.value,
-      prodPipe: prodPipeLayingEl.value,
-      prodManhole: prodManholeEl.value
+    costs: {
+      plumberRate: $('plumberRate').value, helperRate: $('helperRate').value,
+      numPlumbers: $('numPlumbers').value, numHelpers: $('numHelpers').value, dailyHours: $('dailyHours').value,
+      productivityPipe: $('productivityPipe').value, productivityManhole: $('productivityManhole').value, productivityFitting: $('productivityFitting').value,
+      wasteFactor: $('wasteFactor').value, overhead: $('overhead').value, profitMargin: $('profitMargin').value
     }
   };
-  return data;
 }
 
-function saveProjectToJSONFile(){
-  const data = collectProjectData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const filename = `sanitary_storm_project_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'_')}.json`;
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-saveJSONBtn.addEventListener('click', (e) => {
-  try{
-    if(!validateAll()){ outputArea.innerHTML = '<div class="text-danger">Cannot save: validation errors exist.</div>'; return; }
-    saveProjectToJSONFile();
-    outputArea.innerHTML = '<div class="text-success">Project JSON saved to your device.</div>';
-  } catch(err){
-    console.error(err); outputArea.innerHTML = '<div class="text-danger">Error saving project: ' + err.message + '</div>';
-  }
+$('saveJSON').addEventListener('click', ()=>{
+  // validate before save
+  const allValid = watchInputs.every(id => validateNonNegative($(id)));
+  if(!allValid){ alert('Please correct highlighted fields before saving.'); return; }
+  const blob = new Blob([JSON.stringify(getProjectData(), null, 2)], {type:'application/json'});
+  const name = ( $('projectName').value || 'project' ).replace(/[^a-z0-9]/gi,'_') + '_sanitary_project.json';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
 });
 
-function loadProjectFromJSONFile(file){
+$('loadJSONInput').addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
   const reader = new FileReader();
-  reader.onload = function(ev){
+  reader.onload = ev => {
     try{
       const data = JSON.parse(ev.target.result);
-      // restore values (no branding expected)
       if(data.meta && data.meta.units){
-        // ensure we convert displayed values correctly if units differ
-        const prevUnits = unitSystemEl.value;
+        // If units differ, set the incoming values then convert to current units
         const incomingUnits = data.meta.units;
-        // apply values as strings first
+        // apply raw values
+        if(data.project){
+          $('projectName').value = data.project.projectName || '';
+          $('clientName').value = data.project.clientName || '';
+          $('preparedBy').value = data.project.preparedBy || '';
+          if(data.project.currency) $('currency').value = data.project.currency;
+        }
         if(data.sanitary){
-          sanPipeLengthEl.value = data.sanitary.pipeLength || 0;
-          sanPipeSizeEl.value = data.sanitary.pipeSize || 0;
-          sanSlopeEl.value = data.sanitary.slope || 0;
-          sanMHCountEl.value = data.sanitary.manholes || 0;
+          $('sanLength').value = data.sanitary.sanLength || 0;
+          $('sanPipeSize').value = data.sanitary.sanPipeSize || 0;
+          $('sanPipeLength').value = data.sanitary.sanPipeLength || 6;
+          $('sanSlope').value = data.sanitary.sanSlope || 2;
+          $('wc').value = data.sanitary.wc || 0;
+          $('lav').value = data.sanitary.lav || 0;
+          $('sink').value = data.sanitary.sink || 0;
+          $('floorDrain').value = data.sanitary.floorDrain || 0;
         }
         if(data.storm){
-          catchmentAreaEl.value = data.storm.area || 0;
-          rainIntensityEl.value = data.storm.intensity || 0;
-          runoffCoeffEl.value = data.storm.runoffCoeff || 0.8;
-          stormPipeSizeEl.value = data.storm.pipeSize || 0;
+          $('roofArea').value = data.storm.roofArea || 0;
+          $('pavementArea').value = data.storm.pavementArea || 0;
+          $('coef').value = data.storm.coef || 0.9;
+          $('intensity').value = data.storm.intensity || 0;
+          $('stormLength').value = data.storm.stormLength || 0;
+          $('stormPipeSize').value = data.storm.stormPipeSize || 0;
         }
-        if(data.labor){
-          numPlumbersEl.value = data.labor.numPlumbers || 1;
-          numHelpersEl.value = data.labor.numHelpers || 0;
-          prodPipeLayingEl.value = data.labor.prodPipe || 10;
-          prodManholeEl.value = data.labor.prodManhole || 0.8;
+        if(data.costs){
+          $('plumberRate').value = data.costs.plumberRate || 0;
+          $('helperRate').value = data.costs.helperRate || 0;
+          $('numPlumbers').value = data.costs.numPlumbers || 1;
+          $('numHelpers').value = data.costs.numHelpers || 0;
+          $('dailyHours').value = data.costs.dailyHours || 8;
+          $('productivityPipe').value = data.costs.productivityPipe || 10;
+          $('productivityManhole').value = data.costs.productivityManhole || 0.8;
+          $('productivityFitting').value = data.costs.productivityFitting || 20;
+          $('wasteFactor').value = data.costs.wasteFactor || 5;
+          $('overhead').value = data.costs.overhead || 15;
+          $('profitMargin').value = data.costs.profitMargin || 10;
         }
-        // If incoming units differ from current, ensure conversion
-        if(incomingUnits !== prevUnits){
-          // Temporarily set unitSystem to incoming to allow convertVisibleValues to work correctly,
-          // then call convertVisibleValues to bring displayed values into current units.
-          unitSystemEl.value = incomingUnits;
-          // set lastUnitSystem to incoming so convert uses correct 'from' value
-          lastUnitSystem = incomingUnits;
-          // now convert from incomingUnits to prevUnits (user's current selection)
-          convertVisibleValues(incomingUnits, prevUnits);
-          // restore unit selector's visible value to prevUnits
-          unitSystemEl.value = prevUnits;
-          lastUnitSystem = prevUnits;
+        // convert incoming values to current units if needed
+        const currentUnits = $('units').value;
+        if(incomingUnits !== currentUnits){
+          // temporarily set units to incoming, then convert from incoming->current
+          $('units').value = incomingUnits;
+          convertVisibleValues(incomingUnits, currentUnits);
+          $('units').value = currentUnits;
         }
       } else {
-        // Basic fallback restore even if meta not present
-        if(data.sanitary){
-          sanPipeLengthEl.value = data.sanitary.pipeLength || sanPipeLengthEl.value;
-          sanPipeSizeEl.value = data.sanitary.pipeSize || sanPipeSizeEl.value;
-        }
+        alert('JSON does not contain expected structure. Loading best-effort.');
       }
-      markAllDirty();
-      outputArea.innerHTML = '<div class="text-success">Project loaded from JSON. Run Generate Report to update outputs.</div>';
-    } catch(err){
-      console.error(err);
-      outputArea.innerHTML = '<div class="text-danger">Invalid JSON file or parsing error.</div>';
-    }
+      clearCaches();
+      alert('Project loaded. Re-run calculations to update outputs.');
+    } catch(err){ alert('Invalid JSON: ' + err.message); }
   };
-  reader.readAsText(file);
-}
-
-loadJSONInput.addEventListener('change', (ev)=>{
-  const f = ev.target.files && ev.target.files[0];
-  if(!f) return;
-  loadProjectFromJSONFile(f);
-  // clear input so same file can be reloaded later if needed
-  loadJSONInput.value = '';
+  reader.readAsText(f);
+  // clear input
+  e.target.value = '';
 });
 
-/* --- Keyboard navigation for tabs (left/right arrows) --- */
-const tabList = document.getElementById('calcTabs');
-tabList.addEventListener('keydown', (e)=>{
-  const active = tabList.querySelector('.nav-link.active');
-  if(!active) return;
-  if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
-    e.preventDefault();
-    const links = Array.from(tabList.querySelectorAll('.nav-link'));
-    const idx = links.indexOf(active);
-    let nextIdx = idx;
-    if(e.key === 'ArrowRight') nextIdx = (idx + 1) % links.length;
-    if(e.key === 'ArrowLeft') nextIdx = (idx - 1 + links.length) % links.length;
-    links[nextIdx].focus();
-    links[nextIdx].click();
-  }
+/* --- Reset --- */
+$('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Reset all fields to defaults?')) return;
+  location.reload();
 });
 
-/* --- Generate report button: build preview and then call PDF generator (Part 3) --- */
-generateReportBtn.addEventListener('click', (e) => {
+/* --- Buttons: calculate individual sections --- */
+$('calcSan').addEventListener('click', ()=>{
+  try{ calculateSanitary(true); renderSanitaryOutput(); } catch(e){ console.error(e); }
+});
+$('calcStorm').addEventListener('click', ()=>{
+  try{ calculateStorm(true); renderStormOutput(); } catch(e){ console.error(e); }
+});
+$('calcCosts').addEventListener('click', ()=>{
+  try{ calculateCosts(true); renderCostsOutput(); } catch(e){ console.error(e); }
+});
+$('generateSummary').addEventListener('click', ()=>{
+  try{ generateSummary(); } catch(e){ console.error(e); }
+});
+
+/* --- Export Excel (basic) --- */
+$('exportExcel').addEventListener('click', ()=>{
   try{
-    // Validate inputs first
-    if(!validateAll()){
-      outputArea.innerHTML = '<div class="text-danger">Please fix validation errors before generating report.</div>';
-      return;
+    calculateSanitary(true); calculateStorm(true); calculateCosts(true);
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ['Sanitary & Storm Drain Report'],
+      ['Project', $('projectName').value],
+      [],
+      ['Sanitary'],
+      ['Pipe Size', sanitaryResults ? (sanitaryResults.pipeSize_mm + ' mm') : ''],
+      ['Pipe Quantity', sanitaryResults ? sanitaryResults.pipeQty : ''],
+      ['Manholes', sanitaryResults ? sanitaryResults.manholes : ''],
+      [],
+      ['Storm'],
+      ['Total Area (m2)', stormResults ? stormResults.totalArea_m2 : ''],
+      ['Runoff (L/s)', stormResults ? stormResults.runoff_Ls : ''],
+      [],
+      ['Labor'],
+      ['Total Labor Hours', laborResults ? laborResults.totalLaborHours : '']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    XLSX.writeFile(wb, ( $('projectName').value||'project' ).replace(/[^a-z0-9]/gi,'_') + '_Report.xlsx');
+  } catch(err){ alert('Excel export error: ' + err.message); }
+});
+
+/* --- PDF (jsPDF) generation: professional neutral layout --- */
+function exportPDF_jsPDF(){
+  try{
+    // ensure latest
+    calculateSanitary(true); calculateStorm(true); calculateCosts(true);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({unit:'pt', format:'a4'});
+    doc.setFont('helvetica', 'normal');
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 40;
+    doc.setFontSize(16); doc.setFont('helvetica','bold');
+    doc.text('Sanitary & Storm Drain Report', pageW/2, y, {align:'center'});
+    y += 18;
+    doc.setFontSize(10); doc.setFont('helvetica','normal');
+    doc.text('Date: ' + new Date().toLocaleDateString(), 40, y);
+    doc.text('Units: ' + $('units').value, pageW - 140, y);
+    y += 14;
+    doc.setLineWidth(0.5); doc.line(40, y, pageW-40, y);
+    y += 12;
+
+    // Bill of Quantities (simple table layout via autoTable)
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Bill of Quantities', 40, y);
+    y += 6;
+    const boq = [
+      ['Description','Quantity','Unit','Unit Rate','Amount'],
+      ['Sanitary Pipes', sanitaryResults ? sanitaryResults.pipeQty : '', 'pcs','', ''],
+      ['Sanitary Manholes', sanitaryResults ? sanitaryResults.manholes : '', 'pcs','', ''],
+      ['Storm Catch Basins', stormResults ? stormResults.catchBasins : '', 'pcs','', ''],
+      ['Storm Manholes', stormResults ? stormResults.manholes : '', 'pcs','', ''],
+      ['Fittings (estimated)', (sanitaryResults?sanitaryResults.fittings:0) + (stormResults?stormResults.fittings:0), 'pcs','',''],
+      ['','', '','',''],
+      ['Subtotal - Materials','','','',''],
+      ['Waste (%)','', '', $('wasteFactor').value + '%', ''],
+      ['Labor','','','',''],
+      ['Plumber Hours', laborResults ? round(laborResults.plumberHours,1) : '', 'hours','',''],
+      ['Helper Hours', laborResults ? round(laborResults.helperHours,1) : '', 'hours','',''],
+      ['Labor Total','','','', laborResults ? formatCurrency(costResults.totalLaborCost || 0) : ''],
+      ['Summary','','','',''],
+      ['Materials + Labor','','','',''],
+      ['Overhead (%)','', '', $('overhead').value + '%', ''],
+      ['Profit Margin (%)','', '', $('profitMargin').value + '%', ''],
+      ['TOTAL PROJECT COST','','','','']
+    ];
+    doc.autoTable({
+      startY: y,
+      head: [boq[0]],
+      body: boq.slice(1),
+      theme: 'grid',
+      styles:{ font:'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
+      headStyles:{ fillColor:[230,230,230], textColor:0, halign:'center', fontStyle:'bold' },
+      columnStyles: {0:{cellWidth:220},1:{cellWidth:60, halign:'center'},2:{cellWidth:60, halign:'center'},3:{cellWidth:80, halign:'right'},4:{cellWidth:80, halign:'right'}}
+    });
+    let finalY = doc.autoTable.previous.finalY + 12;
+    if(finalY > doc.internal.pageSize.getHeight() - 120){ doc.addPage(); finalY = 60; }
+
+    // Sanitary System Summary
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Sanitary System Summary', 40, finalY); finalY += 10;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    if(sanitaryResults){
+      const sanSize = $('units').value === 'metric' ? Math.round(sanitaryResults.pipeSize_mm) + ' mm' : (round(sanitaryResults.pipeSize_mm / MM_PER_IN,2)) + ' in';
+      doc.text('Recommended pipe size: ' + sanSize, 40, finalY); finalY += 12;
+      doc.text('Manholes: ' + sanitaryResults.manholes, 40, finalY); finalY += 12;
+      doc.text('Fittings (est.): ' + sanitaryResults.fittings, 40, finalY); finalY += 16;
+    } else { doc.text('No sanitary data', 40, finalY); finalY += 16; }
+
+    // Storm Drain System Summary
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Storm Drain System Summary', 40, finalY); finalY += 10;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    if(stormResults){
+      const stormSize = $('units').value === 'metric' ? Math.round(stormResults.pipeSize_mm) + ' mm' : (round(stormResults.pipeSize_mm / MM_PER_IN,2)) + ' in';
+      const flowDisp = $('units').value === 'metric' ? fmt(stormResults.runoff_Ls,2) + ' L/s' : fmt(stormResults.runoff_Ls * LS_TO_GPM,2) + ' gpm';
+      doc.text('Total area: ' + fmt(stormResults.totalArea_m2,2) + ' m²', 40, finalY); finalY += 12;
+      doc.text('Runoff: ' + flowDisp, 40, finalY); finalY += 12;
+      doc.text('Pipe size selected: ' + stormSize, 40, finalY); finalY += 12;
+      doc.text('Catch basins: ' + stormResults.catchBasins, 40, finalY); finalY += 16;
+    } else { doc.text('No storm data', 40, finalY); finalY += 16; }
+
+    // Labor Requirements Summary
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Labor Requirements Summary', 40, finalY); finalY += 10;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    if(laborResults){
+      doc.text('Plumbers: ' + laborResults.numPlumbers, 40, finalY); finalY += 12;
+      doc.text('Helpers: ' + laborResults.numHelpers, 40, finalY); finalY += 12;
+      doc.text('Total labor days (est.): ' + fmt(laborResults.totalDays,2) + ' days', 40, finalY); finalY += 12;
+      doc.text('Total labor hours: ' + fmt(laborResults.totalLaborHours,1) + ' hrs', 40, finalY); finalY += 12;
+      doc.text('Plumber hours: ' + fmt(laborResults.plumberHours,1) + ' hrs', 40, finalY); finalY += 12;
+      doc.text('Helper hours: ' + fmt(laborResults.helperHours,1) + ' hrs', 40, finalY); finalY += 12;
+    } else { doc.text('No labor data', 40, finalY); finalY += 12; }
+
+    // Footer: page numbers
+    const totalPages = doc.internal.getNumberOfPages();
+    for(let i=1;i<=totalPages;i++){
+      doc.setPage(i);
+      doc.setFontSize(9); doc.setTextColor(120);
+      doc.text(`Page ${i} of ${totalPages}`, pageW - 60, doc.internal.pageSize.getHeight() - 30);
     }
-    // Build preview in the report tab
-    buildReportPreview();
-    // Call PDF generator (function implemented in Part 3) - keep it asynchronous-friendly
-    if(typeof generatePDFReport === 'function'){
-      // ensure caches are up-to-date
-      calculateSanitary(true);
-      calculateStorm(true);
-      calculateLabor(true);
-      // pass the cached results to the PDF generator
-      generatePDFReport({ sanitary: sanitaryCache, storm: stormCache, labor: laborCache });
-    } else {
-      // If Part 3 not present, just show preview message
-      outputArea.innerHTML += '<div class="text-muted mt-2">PDF generator not available in this part. Proceeding only with preview.</div>';
-    }
+
+    const safeName = ( $('projectName').value || 'project' ).replace(/[^a-z0-9]/gi,'_');
+    doc.save(`${safeName}_Report.pdf`);
   } catch(err){
-    console.error('Report generation error:', err);
-    outputArea.innerHTML = '<div class="text-danger">Error generating report. Check input values.</div>';
+    console.error('PDF export error', err); alert('PDF export failed: ' + err.message);
   }
-});
-
-/* --- Accessibility: ensure labels have 'for' and inputs have ARIA (added in markup) --- */
-/* Extra: move focus to outputArea after generating preview for keyboard users */
-generateReportBtn.addEventListener('keydown', (e) => {
-  if(e.key === 'Enter' || e.key === ' '){
-    e.preventDefault();
-    generateReportBtn.click();
-  }
-});
-
-/* Initialize unit labels and any other UI state */
-updateUnitLabels();
-markAllDirty();
-</script>
-<!-- jsPDF (for PDF generation) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<script>
-/* ---------------------------
-   Part 3 - PDF Report
-   - Neutral professional layout (Helvetica, black text)
-   - Sections:
-       1. Header
-       2. Bill of Quantities
-       3. Sanitary System Summary
-       4. Storm Drain System Summary
-       5. Labor Requirements
-   - Omits productivity & pipe length lines
-----------------------------*/
-
-const { jsPDF } = window.jspdf;
-
-function generatePDFReport(data){
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const margin = 15;
-  let y = margin;
-
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  // Header
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("Sanitary & Storm Drain Report", pageWidth / 2, y, { align: "center" });
-  y += 8;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
-  y += 6;
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 8;
-
-  // ===== Bill of Quantities =====
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Bill of Quantities", margin, y);
-  y += 6;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-
-  const tableX = margin;
-  const colWidths = [70, 25, 20, 25, 30];
-  const headers = ["Description", "Quantity", "Unit", "Unit Rate", "Amount"];
-
-  // Table header
-  let x = tableX;
-  headers.forEach((h, i) => {
-    doc.text(h, x + 2, y);
-    x += colWidths[i];
-  });
-  y += 4;
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 3;
-
-  function tableRow(desc, qty, unit, rate, amt){
-    let x = tableX;
-    const lineH = 5;
-    doc.text(desc, x + 2, y);
-    x += colWidths[0];
-    doc.text(String(qty), x + 2, y);
-    x += colWidths[1];
-    doc.text(unit, x + 2, y);
-    x += colWidths[2];
-    doc.text(rate, x + 2, y);
-    x += colWidths[3];
-    doc.text(amt, x + 2, y);
-    y += lineH;
-    if(y > pageHeight - 20){
-      doc.addPage();
-      y = margin;
-    }
-  }
-
-  // Example computed rows (no actual cost rates yet; placeholders)
-  tableRow("Sanitary Pipes", "-", "m", "-", "-");
-  tableRow("Sanitary Manholes", data.sanitary.manholes, "units", "-", "-");
-  tableRow("Storm Drain Pipes", "-", "m", "-", "-");
-  tableRow("Catch Basins", data.storm.catchBasins, "units", "-", "-");
-  tableRow("Storm Manholes", data.storm.manholes, "units", "-", "-");
-  tableRow("Misc. Fittings", data.sanitary.fittings + data.storm.fittings, "pcs", "-", "-");
-
-  y += 2;
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-  doc.setFont("helvetica", "bold");
-  doc.text("Subtotal (Materials & Labor): __________________________", margin, y);
-  y += 8;
-  doc.text("Overheads & Profit: __________________________", margin, y);
-  y += 8;
-  doc.text("Total Estimated Cost: __________________________", margin, y);
-  y += 10;
-
-  // ===== Sanitary System Summary =====
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Sanitary System Summary", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  const san = data.sanitary;
-  const units = unitSystemEl.value;
-  const sanSizeDisplay = units === "metric"
-      ? `${Math.round(san.pipeSize_mm)} mm`
-      : `${(san.pipeSize_mm / 25.4).toFixed(2)} in`;
-  doc.text(`Pipe Size: ${sanSizeDisplay}`, margin, y); y += 5;
-  doc.text(`Manholes: ${san.manholes}`, margin, y); y += 5;
-  doc.text(`Fittings (est.): ${san.fittings}`, margin, y); y += 8;
-
-  // ===== Storm Drain System Summary =====
-  doc.setFont("helvetica", "bold");
-  doc.text("Storm Drain System Summary", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  const storm = data.storm;
-  const flowDisplay =
-      units === "metric"
-        ? `${storm.runoff_Ls.toFixed(2)} L/s`
-        : `${(storm.runoff_Ls * 15.8503).toFixed(2)} gpm`;
-  const stormSizeDisplay =
-      units === "metric"
-        ? `${Math.round(storm.pipeSize_mm)} mm`
-        : `${(storm.pipeSize_mm / 25.4).toFixed(2)} in`;
-  doc.text(`Catchment Area: ${storm.catchmentArea_m2.toFixed(2)} m²`, margin, y); y += 5;
-  doc.text(`Runoff: ${flowDisplay}`, margin, y); y += 5;
-  doc.text(`Pipe Size: ${stormSizeDisplay}`, margin, y); y += 5;
-  doc.text(`Catch Basins: ${storm.catchBasins}`, margin, y); y += 8;
-
-  // ===== Labor Requirements =====
-  const labor = data.labor;
-  doc.setFont("helvetica", "bold");
-  doc.text("Labor Requirements Summary", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.text(`Plumbers: ${labor.numPlumbers}`, margin, y); y += 5;
-  doc.text(`Helpers: ${labor.numHelpers}`, margin, y); y += 5;
-  doc.text(`Total Labor Days: ${labor.totalDays.toFixed(2)}`, margin, y); y += 5;
-  doc.text(`Total Labor Hours: ${labor.totalLaborHours.toFixed(1)}`, margin, y); y += 5;
-  doc.text(`Plumber Hours: ${labor.plumberHours.toFixed(1)}`, margin, y); y += 5;
-  doc.text(`Helper Hours: ${labor.helperHours.toFixed(1)}`, margin, y); y += 10;
-
-  // Footer (page numbering)
-  const totalPages = doc.internal.getNumberOfPages();
-  for(let i=1; i<=totalPages; i++){
-    doc.setPage(i);
-    const pageStr = `Page ${i} of ${totalPages}`;
-    doc.setFontSize(9);
-    doc.text(pageStr, pageWidth - margin, pageHeight - 10, { align: "right" });
-  }
-
-  doc.save("Sanitary_Storm_Report.pdf");
 }
-</script>
 
+/* --- Wire export button --- */
+$('exportPDF').addEventListener('click', ()=> exportPDF_jsPDF());
+
+/* Initialize some default renders */
+document.addEventListener('DOMContentLoaded', ()=> {
+  setUnitLabels();
+  // initial calculations
+  calculateSanitary(true); renderSanitaryOutput();
+  calculateStorm(true); renderStormOutput();
+  calculateCosts(true); renderCostsOutput();
+});
+
+/* Keyboard nav: left/right to switch tabs */
+document.getElementById('mainTabs').addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+    const tabs = Array.from(document.querySelectorAll('#mainTabs .nav-link'));
+    const activeIndex = tabs.findIndex(t => t.classList.contains('active'));
+    if(activeIndex === -1) return;
+    let ni = activeIndex + (e.key === 'ArrowRight' ? 1 : -1);
+    if(ni < 0) ni = tabs.length -1;
+    if(ni >= tabs.length) ni = 0;
+    tabs[ni].focus(); tabs[ni].click();
+  }
+});
+</script>
 </body>
 </html>
