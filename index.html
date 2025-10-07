@@ -947,6 +947,19 @@ function exportToPDF(){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'pt', format:'a4' });
     
+    // Track page numbers manually
+    let currentPage = 1;
+    const totalPages = []; // We'll track this as we go
+    
+    // Function to add page number to current page
+    function addPageNumber() {
+      const pageSize = doc.internal.pageSize;
+      doc.setFont('helvetica');
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text(`Page ${currentPage}`, pageSize.width - 60, pageSize.height - 30);
+    }
+
     // Set consistent font family for entire document
     doc.setFont('helvetica');
     doc.setFontSize(10);
@@ -958,7 +971,11 @@ function exportToPDF(){
 
     function newPageIfNeeded(linesNeeded = 60){
       if (y + linesNeeded > bottomLimit){
+        // Add page number to current page before creating new one
+        addPageNumber();
+        
         doc.addPage();
+        currentPage++;
         y = topMargin;
         doc.setFont('helvetica');
         doc.setFontSize(10);
@@ -1044,11 +1061,9 @@ function exportToPDF(){
         }
       },
       didDrawPage: function(data){
-        doc.setFont('helvetica');
-        doc.setFontSize(9);
-        doc.setTextColor(120);
-        const pageSize = doc.internal.pageSize;
-        doc.text(`Page ${data.pageNumber}`, pageSize.width - 60, pageSize.height - 30);
+        // Update current page for table pages
+        currentPage = data.pageNumber;
+        addPageNumber();
       }
     });
 
@@ -1071,6 +1086,15 @@ function exportToPDF(){
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       contentLines.forEach(line => {
+        // Check if we need a new page for each line
+        if (y > bottomLimit - 20) {
+          addPageNumber();
+          doc.addPage();
+          currentPage++;
+          y = topMargin;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10);
+        }
         doc.text(line, leftMargin, y);
         y += 14;
       });
@@ -1121,6 +1145,9 @@ function exportToPDF(){
       `  • Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`
     ];
     createSummarySection('Labor Requirements', laborContent);
+
+    // Add page number to the final page
+    addPageNumber();
 
     // save file
     const safeName = (document.getElementById('projectName').value||'project').replace(/[^a-z0-9]/gi,'_');
