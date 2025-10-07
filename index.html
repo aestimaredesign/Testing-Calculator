@@ -1057,58 +1057,28 @@ function exportToPDF(){
     doc.setFont('helvetica');
     doc.setFontSize(10);
 
-    // Function to create summary boxes automatically
-    function createSummaryBox(title, contentLines, boxPadding = 12) {
-      newPageIfNeeded((contentLines.length + 2) * 14 + 20);
+    // Function to create summary sections without boxes
+    function createSummarySection(title, contentLines) {
+      newPageIfNeeded((contentLines.length + 2) * 14);
       
-      const boxX = leftMargin - 4;
-      const boxWidth = doc.internal.pageSize.getWidth() - leftMargin * 2 + 8;
-      const startY = y;
-      
-      // Calculate text height first
-      let currentY = y;
+      // Section title
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
-      currentY += 14; // Title height
+      doc.text(title, leftMargin, y);
+      y += 16;
       
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      contentLines.forEach(() => {
-        currentY += 12; // Each content line
-      });
-      
-      const boxHeight = currentY - startY + boxPadding;
-      
-      // Check if we need a new page for the entire box
-      if (startY + boxHeight > bottomLimit) {
-        doc.addPage();
-        y = topMargin;
-        return createSummaryBox(title, contentLines, boxPadding); // Recursive call with new page
-      }
-      
-      // Draw the box first
-      doc.setDrawColor(200);
-      doc.rect(boxX, startY - 6, boxWidth, boxHeight, 'S');
-      
-      // Now draw the content
-      currentY = y;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text(title, leftMargin, currentY);
-      currentY += 14;
-      
+      // Section content
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       contentLines.forEach(line => {
-        doc.text(line, leftMargin, currentY);
-        currentY += 12;
+        doc.text(line, leftMargin, y);
+        y += 14;
       });
       
-      y = currentY + 8; // Add some spacing after the box
-      return y;
+      y += 12; // Add extra spacing after section
     }
 
-    // SANITARY SUMMARY BOX
+    // SANITARY SUMMARY
     const sanitaryContent = [
       `Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`,
       `Drainage Load: ${document.getElementById('units').value==='metric' ? 
@@ -1120,9 +1090,9 @@ function exportToPDF(){
         formatNumber(sanitaryResults.pipeLength_m,1)+' m' : 
         formatNumber(sanitaryResults.pipeLength_m*M_TO_FT,1)+' ft'}`
     ];
-    y = createSummaryBox('Sanitary System Summary', sanitaryContent);
+    createSummarySection('Sanitary System Summary', sanitaryContent);
 
-    // STORM SUMMARY BOX
+    // STORM SUMMARY
     const stormContent = [
       `Total Area: ${document.getElementById('units').value==='metric' ? 
         formatNumber(stormResults.totalArea_m2,2)+' m²' : 
@@ -1136,20 +1106,21 @@ function exportToPDF(){
         formatNumber(stormResults.pipeLength_m,1)+' m' : 
         formatNumber(stormResults.pipeLength_m*M_TO_FT,1)+' ft'}`
     ];
-    y = createSummaryBox('Storm Drain Summary', stormContent);
+    createSummarySection('Storm Drain Summary', stormContent);
 
-    // LABOR SUMMARY BOX
+    // LABOR SUMMARY
     const laborContent = [
       `Total Labor Hours: ${formatNumber(laborResults.totalLaborHours,1)} hrs`,
       `Plumber Hours: ${formatNumber(laborResults.plumberHours,1)} hrs`,
       `Helper Hours: ${formatNumber(laborResults.helperHours,1)} hrs`,
       `Equivalent Man-Days: ${formatNumber(laborResults.totalLaborDays,2)} days`,
       `Total Labor Cost: ${formatCurrencyForPDF(laborResults.totalLaborCost)}`,
-      `Productivity rates: Pipe: ${document.getElementById('productivityPipe').value} ${document.getElementById('productivityPipeUnit').textContent}`,
-      `Manhole: ${document.getElementById('productivityManhole').value} ${document.getElementById('productivityManholeUnit').textContent}`,
-      `Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`
+      `Productivity rates used:`,
+      `  • Pipe: ${document.getElementById('productivityPipe').value} ${document.getElementById('productivityPipeUnit').textContent}`,
+      `  • Manhole: ${document.getElementById('productivityManhole').value} ${document.getElementById('productivityManholeUnit').textContent}`,
+      `  • Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`
     ];
-    y = createSummaryBox('Labor Requirements', laborContent);
+    createSummarySection('Labor Requirements', laborContent);
 
     // save file
     const safeName = (document.getElementById('projectName').value||'project').replace(/[^a-z0-9]/gi,'_');
