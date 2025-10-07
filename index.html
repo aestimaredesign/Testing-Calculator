@@ -160,6 +160,44 @@ button.secondary{background:var(--secondary)}
         <div class="input-group"><input id="sanSlope" type="number" min="0.5" max="10" step="0.1" value="2"></div>
       </div>
 
+      <!-- New Sanitary Accessories Input Section -->
+      <h3>Sanitary Accessories (Optional - Leave blank for automatic calculation)</h3>
+      <div class="form-row">
+        <label>Traps:</label>
+        <div class="input-group">
+          <input id="sanTrapsManual" type="number" min="0" placeholder="Auto-calculated from fixtures">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Vents:</label>
+        <div class="input-group">
+          <input id="sanVentsManual" type="number" min="0" placeholder="Auto-calculated from fixtures">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Cleanouts:</label>
+        <div class="input-group">
+          <input id="sanCleanoutsManual" type="number" min="0" placeholder="Auto: 1 per 30m">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Manholes:</label>
+        <div class="input-group">
+          <input id="sanManholesManual" type="number" min="0" placeholder="Auto: 1 per 50m">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Fittings/Elbows:</label>
+        <div class="input-group">
+          <input id="sanFittingsManual" type="number" min="0" placeholder="Auto: 1 per 10m">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+
       <div class="button-group">
         <button onclick="calculateSanitary()">Calculate Sanitary System</button>
       </div>
@@ -202,10 +240,40 @@ button.secondary{background:var(--secondary)}
         <label>Commercial Pipe Length:</label>
         <div class="input-group"><select id="stormPipeLength"><option value="3">3 m</option><option value="6" selected>6 m</option></select></div>
       </div>
-
       <div class="form-row">
         <label>Pipe Slope (%):</label>
         <div class="input-group"><input id="stormSlope" type="number" min="0.5" max="10" step="0.1" value="1"></div>
+      </div>
+
+      <!-- New Storm Drain Accessories Input Section -->
+      <h3>Storm Drain Accessories (Optional - Leave blank for automatic calculation)</h3>
+      <div class="form-row">
+        <label>Downspouts:</label>
+        <div class="input-group">
+          <input id="stormDownspoutsManual" type="number" min="0" placeholder="Auto: 1 per 100m² roof">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Catch Basins:</label>
+        <div class="input-group">
+          <input id="stormCatchBasinsManual" type="number" min="0" placeholder="Auto: 1 per 60m">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Manholes:</label>
+        <div class="input-group">
+          <input id="stormManholesManual" type="number" min="0" placeholder="Auto: 1 per 50m">
+          <div class="unit">pcs</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Fittings/Elbows:</label>
+        <div class="input-group">
+          <input id="stormFittingsManual" type="number" min="0" placeholder="Auto: 1 per 10m">
+          <div class="unit">pcs</div>
+        </div>
       </div>
 
       <div class="button-group">
@@ -295,174 +363,174 @@ button.secondary{background:var(--secondary)}
   </div>
 
   <!-- Help & Formulas -->
-<div id="help" class="tab-content">
-  <div class="section">
-    <h2>Help & Formulas</h2>
-    
-    <h3>How to Use This Calculator</h3>
-    <div class="formula" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <h4 style="margin-top: 0;">Step-by-Step Guide:</h4>
-      <ol>
-        <li><strong>Project Info:</strong> Enter basic project details and select your preferred units (Metric/Imperial)</li>
-        <li><strong>Sanitary System:</strong> Input fixture counts and pipe system parameters</li>
-        <li><strong>Storm System:</strong> Enter drainage areas and rainfall data</li>
-        <li><strong>Costs & Labor:</strong> Configure material costs, labor rates, and productivity factors</li>
-        <li><strong>Summary & Export:</strong> Generate comprehensive report and export to PDF/Excel</li>
-        <li>Use "Save Project" to store your work and "Load Project" to continue later</li>
-      </ol>
-    </div>
+  <div id="help" class="tab-content">
+    <div class="section">
+      <h2>Help & Formulas</h2>
+      
+      <h3>How to Use This Calculator</h3>
+      <div class="formula" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0;">Step-by-Step Guide:</h4>
+        <ol>
+          <li><strong>Project Info:</strong> Enter basic project details and select your preferred units (Metric/Imperial)</li>
+          <li><strong>Sanitary System:</strong> Input fixture counts and pipe system parameters</li>
+          <li><strong>Storm System:</strong> Enter drainage areas and rainfall data</li>
+          <li><strong>Costs & Labor:</strong> Configure material costs, labor rates, and productivity factors</li>
+          <li><strong>Summary & Export:</strong> Generate comprehensive report and export to PDF/Excel</li>
+          <li>Use "Save Project" to store your work and "Load Project" to continue later</li>
+        </ol>
+      </div>
 
-    <h3>Standards Reference</h3>
-    <div style="margin-bottom: 20px;">
-      <p><strong>Supported Plumbing Codes:</strong></p>
+      <h3>Standards Reference</h3>
+      <div style="margin-bottom: 20px;">
+        <p><strong>Supported Plumbing Codes:</strong></p>
+        <ul>
+          <li><strong>RNPCP (Philippines)</strong> - Revised National Plumbing Code of the Philippines</li>
+          <li><strong>IPC</strong> - International Plumbing Code</li>
+          <li><strong>UPC</strong> - Uniform Plumbing Code</li>
+        </ul>
+      </div>
+
+      <h3>Complete Formulas Used</h3>
+
+      <h4>Sanitary System Calculations</h4>
+      <div class="formula">Total Fixture Units (FU) = Σ(Fixture Count × Fixture Unit Value)</div>
+      <div class="formula">Drainage Load (L/s) = Total Fixture Units × 0.8 (conversion factor)</div>
+      <div class="formula">Drainage Load (gpm) = Drainage Load (L/s) × 15.85032314</div>
+      
+      <p><strong>Pipe Sizing Logic:</strong></p>
       <ul>
-        <li><strong>RNPCP (Philippines)</strong> - Revised National Plumbing Code of the Philippines</li>
-        <li><strong>IPC</strong> - International Plumbing Code</li>
-        <li><strong>UPC</strong> - Uniform Plumbing Code</li>
+        <li>≤ 21 FU → 50 mm pipe</li>
+        <li>22-40 FU → 75 mm pipe</li>
+        <li>41-180 FU → 100 mm pipe</li>
+        <li>181-800 FU → 150 mm pipe</li>
+        <li>> 800 FU → 200 mm pipe</li>
       </ul>
-    </div>
 
-    <h3>Complete Formulas Used</h3>
-
-    <h4>Sanitary System Calculations</h4>
-    <div class="formula">Total Fixture Units (FU) = Σ(Fixture Count × Fixture Unit Value)</div>
-    <div class="formula">Drainage Load (L/s) = Total Fixture Units × 0.8 (conversion factor)</div>
-    <div class="formula">Drainage Load (gpm) = Drainage Load (L/s) × 15.85032314</div>
-    
-    <p><strong>Pipe Sizing Logic:</strong></p>
-    <ul>
-      <li>≤ 21 FU → 50 mm pipe</li>
-      <li>22-40 FU → 75 mm pipe</li>
-      <li>41-180 FU → 100 mm pipe</li>
-      <li>181-800 FU → 150 mm pipe</li>
-      <li>> 800 FU → 200 mm pipe</li>
-    </ul>
-
-    <h4>Storm Drain System Calculations</h4>
-    <div class="formula">Q (L/s) = C × I (mm/hr) × A (m²) ÷ 360</div>
-    <div class="formula">Q (gpm) = C × I (in/hr) × A (ft²) ÷ 96.23</div>
-    <p>Where:<br>
-    <strong>Q</strong> = Runoff rate<br>
-    <strong>C</strong> = Runoff coefficient (0.1-1.0)<br>
-    <strong>I</strong> = Rainfall intensity<br>
-    <strong>A</strong> = Drainage area</p>
-    
-    <p><strong>Pipe Sizing Logic:</strong></p>
-    <ul>
-      <li>≤ 1.2 L/s → 75 mm pipe</li>
-      <li>1.3-2.5 L/s → 100 mm pipe</li>
-      <li>2.6-5.3 L/s → 150 mm pipe</li>
-      <li>5.4-15.0 L/s → 200 mm pipe</li>
-      <li>> 15.0 L/s → 250 mm pipe</li>
-    </ul>
-
-    <h4>Cost & Labor Calculations</h4>
-    <div class="formula">Total Material Cost = Σ(Quantity × Unit Cost)</div>
-    <div class="formula">Material Cost with Waste = Total Material Cost × (1 + Waste Factor%)</div>
-    <div class="formula">Labor Hours = Σ(Task Quantity ÷ Productivity Rate)</div>
-    <div class="formula">Labor Cost = (Plumber Hours × Plumber Rate) + (Helper Hours × Helper Rate)</div>
-    <div class="formula">Subtotal = Material Cost with Waste + Labor Cost</div>
-    <div class="formula">Total with Overhead = Subtotal × (1 + Overhead%)</div>
-    <div class="formula">Final Project Cost = Total with Overhead × (1 + Profit Margin%)</div>
-
-    <h4>Productivity & Labor Allocation</h4>
-    <div class="formula">Pipe Laying Days = Total Pipe Length ÷ Pipe Laying Productivity</div>
-    <div class="formula">Manhole Days = Total Manholes ÷ Manhole Installation Productivity</div>
-    <div class="formula">Fitting Days = Total Fittings ÷ Fitting Installation Productivity</div>
-    <div class="formula">Total Labor Days = Pipe Days + Manhole Days + Fitting Days</div>
-    <p><strong>Labor Allocation:</strong> 60% Pipe Work, 25% Manholes, 15% Fittings</p>
-
-    <h3>Fixture Unit Reference Table</h3>
-    <table class="reference-table">
-      <thead>
-        <tr>
-          <th>Fixture Type</th>
-          <th>Fixture Units (FU)</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Water Closet</td><td>6</td><td>Per fixture</td></tr>
-        <tr><td>Lavatory</td><td>1</td><td>Per fixture</td></tr>
-        <tr><td>Kitchen Sink</td><td>2</td><td>Per fixture</td></tr>
-        <tr><td>Shower</td><td>2</td><td>Per fixture</td></tr>
-        <tr><td>Bathtub</td><td>2</td><td>Per fixture</td></tr>
-        <tr><td>Urinal</td><td>4</td><td>Per fixture</td></tr>
-        <tr><td>Floor Drain</td><td>2</td><td>Per fixture</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Runoff Coefficient Reference</h3>
-    <table class="reference-table">
-      <thead>
-        <tr>
-          <th>Surface Type</th>
-          <th>Coefficient (C)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Roofs (smooth)</td><td>0.90-0.95</td></tr>
-        <tr><td>Pavement (asphalt/concrete)</td><td>0.85-0.95</td></tr>
-        <tr><td>Gravel surfaces</td><td>0.25-0.60</td></tr>
-        <tr><td>Lawns (flat, sandy soil)</td><td>0.05-0.20</td></tr>
-        <tr><td>Lawns (steep, clay soil)</td><td>0.15-0.35</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Rainfall Intensity Guidelines</h3>
-    <table class="reference-table">
-      <thead>
-        <tr>
-          <th>Rainfall Type</th>
-          <th>Intensity (mm/hr)</th>
-          <th>Intensity (in/hr)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Light Rain</td><td>2.5-10</td><td>0.1-0.4</td></tr>
-        <tr><td>Moderate Rain</td><td>10-50</td><td>0.4-2.0</td></tr>
-        <tr><td>Heavy Rain</td><td>50-100</td><td>2.0-4.0</td></tr>
-        <tr><td>Cloudburst</td><td>>100</td><td>>4.0</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Default Spacing Standards</h3>
-    <table class="reference-table">
-      <thead>
-        <tr>
-          <th>Component</th>
-          <th>Default Spacing</th>
-          <th>Purpose</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Cleanouts</td><td>Every 30 meters</td><td>Access for maintenance</td></tr>
-        <tr><td>Manholes</td><td>Every 50 meters</td><td>Access and direction changes</td></tr>
-        <tr><td>Fittings/Elbows</td><td>Every 10 meters</td><td>Pipe direction changes</td></tr>
-        <tr><td>Downspouts</td><td>Per 100 m² roof area</td><td>Roof drainage</td></tr>
-        <tr><td>Catch Basins</td><td>Every 60 meters</td><td>Surface water collection</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Tips for Accurate Calculations</h3>
-    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+      <h4>Storm Drain System Calculations</h4>
+      <div class="formula">Q (L/s) = C × I (mm/hr) × A (m²) ÷ 360</div>
+      <div class="formula">Q (gpm) = C × I (in/hr) × A (ft²) ÷ 96.23</div>
+      <p>Where:<br>
+      <strong>Q</strong> = Runoff rate<br>
+      <strong>C</strong> = Runoff coefficient (0.1-1.0)<br>
+      <strong>I</strong> = Rainfall intensity<br>
+      <strong>A</strong> = Drainage area</p>
+      
+      <p><strong>Pipe Sizing Logic:</strong></p>
       <ul>
-        <li><strong>Always verify</strong> local code requirements before finalizing designs</li>
-        <li><strong>Adjust productivity rates</strong> based on your crew's experience and site conditions</li>
-        <li><strong>Consider soil conditions</strong> when estimating excavation and installation times</li>
-        <li><strong>Update material costs</strong> regularly to reflect current market prices</li>
-        <li><strong>Use appropriate safety factors</strong> for critical applications</li>
-        <li><strong>Consult licensed engineers</strong> for complex projects or formal submissions</li>
+        <li>≤ 1.2 L/s → 75 mm pipe</li>
+        <li>1.3-2.5 L/s → 100 mm pipe</li>
+        <li>2.6-5.3 L/s → 150 mm pipe</li>
+        <li>5.4-15.0 L/s → 200 mm pipe</li>
+        <li>> 15.0 L/s → 250 mm pipe</li>
       </ul>
-    </div>
 
-    <div class="disclaimer" style="margin-top: 20px;">
-      <strong>Important Disclaimer:</strong> This calculator provides estimates based on standard engineering principles. 
-      Always consult local building codes, regulations, and licensed professionals for formal design and approval processes. 
-      Results should be verified by qualified engineers for critical applications.
+      <h4>Cost & Labor Calculations</h4>
+      <div class="formula">Total Material Cost = Σ(Quantity × Unit Cost)</div>
+      <div class="formula">Material Cost with Waste = Total Material Cost × (1 + Waste Factor%)</div>
+      <div class="formula">Labor Hours = Σ(Task Quantity ÷ Productivity Rate)</div>
+      <div class="formula">Labor Cost = (Plumber Hours × Plumber Rate) + (Helper Hours × Helper Rate)</div>
+      <div class="formula">Subtotal = Material Cost with Waste + Labor Cost</div>
+      <div class="formula">Total with Overhead = Subtotal × (1 + Overhead%)</div>
+      <div class="formula">Final Project Cost = Total with Overhead × (1 + Profit Margin%)</div>
+
+      <h4>Productivity & Labor Allocation</h4>
+      <div class="formula">Pipe Laying Days = Total Pipe Length ÷ Pipe Laying Productivity</div>
+      <div class="formula">Manhole Days = Total Manholes ÷ Manhole Installation Productivity</div>
+      <div class="formula">Fitting Days = Total Fittings ÷ Fitting Installation Productivity</div>
+      <div class="formula">Total Labor Days = Pipe Days + Manhole Days + Fitting Days</div>
+      <p><strong>Labor Allocation:</strong> 60% Pipe Work, 25% Manholes, 15% Fittings</p>
+
+      <h3>Fixture Unit Reference Table</h3>
+      <table class="reference-table">
+        <thead>
+          <tr>
+            <th>Fixture Type</th>
+            <th>Fixture Units (FU)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Water Closet</td><td>6</td><td>Per fixture</td></tr>
+          <tr><td>Lavatory</td><td>1</td><td>Per fixture</td></tr>
+          <tr><td>Kitchen Sink</td><td>2</td><td>Per fixture</td></tr>
+          <tr><td>Shower</td><td>2</td><td>Per fixture</td></tr>
+          <tr><td>Bathtub</td><td>2</td><td>Per fixture</td></tr>
+          <tr><td>Urinal</td><td>4</td><td>Per fixture</td></tr>
+          <tr><td>Floor Drain</td><td>2</td><td>Per fixture</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Runoff Coefficient Reference</h3>
+      <table class="reference-table">
+        <thead>
+          <tr>
+            <th>Surface Type</th>
+            <th>Coefficient (C)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Roofs (smooth)</td><td>0.90-0.95</td></tr>
+          <tr><td>Pavement (asphalt/concrete)</td><td>0.85-0.95</td></tr>
+          <tr><td>Gravel surfaces</td><td>0.25-0.60</td></tr>
+          <tr><td>Lawns (flat, sandy soil)</td><td>0.05-0.20</td></tr>
+          <tr><td>Lawns (steep, clay soil)</td><td>0.15-0.35</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Rainfall Intensity Guidelines</h3>
+      <table class="reference-table">
+        <thead>
+          <tr>
+            <th>Rainfall Type</th>
+            <th>Intensity (mm/hr)</th>
+            <th>Intensity (in/hr)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Light Rain</td><td>2.5-10</td><td>0.1-0.4</td></tr>
+          <tr><td>Moderate Rain</td><td>10-50</td><td>0.4-2.0</td></tr>
+          <tr><td>Heavy Rain</td><td>50-100</td><td>2.0-4.0</td></tr>
+          <tr><td>Cloudburst</td><td>>100</td><td>>4.0</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Default Spacing Standards</h3>
+      <table class="reference-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Default Spacing</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Cleanouts</td><td>Every 30 meters</td><td>Access for maintenance</td></tr>
+          <tr><td>Manholes</td><td>Every 50 meters</td><td>Access and direction changes</td></tr>
+          <tr><td>Fittings/Elbows</td><td>Every 10 meters</td><td>Pipe direction changes</td></tr>
+          <tr><td>Downspouts</td><td>Per 100 m² roof area</td><td>Roof drainage</td></tr>
+          <tr><td>Catch Basins</td><td>Every 60 meters</td><td>Surface water collection</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Tips for Accurate Calculations</h3>
+      <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+        <ul>
+          <li><strong>Always verify</strong> local code requirements before finalizing designs</li>
+          <li><strong>Adjust productivity rates</strong> based on your crew's experience and site conditions</li>
+          <li><strong>Consider soil conditions</strong> when estimating excavation and installation times</li>
+          <li><strong>Update material costs</strong> regularly to reflect current market prices</li>
+          <li><strong>Use appropriate safety factors</strong> for critical applications</li>
+          <li><strong>Consult licensed engineers</strong> for complex projects or formal submissions</li>
+        </ul>
+      </div>
+
+      <div class="disclaimer" style="margin-top: 20px;">
+        <strong>Important Disclaimer:</strong> This calculator provides estimates based on standard engineering principles. 
+        Always consult local building codes, regulations, and licensed professionals for formal design and approval processes. 
+        Results should be verified by qualified engineers for critical applications.
+      </div>
     </div>
   </div>
-</div>
 
 </div>
 
@@ -674,21 +742,20 @@ function calculateSanitary(){
 
   let sanLength = clampMin(safeNumber(document.getElementById('sanLength').value,0), 0);
   const sanPipeLengthMeters = clampMin(safeNumber(document.getElementById('sanPipeLength').value,6), 0.1);
-  // ensure slope is within reasonable bounds
   const sanSlope = clampMin(safeNumber(document.getElementById('sanSlope').value,2), 0.1);
   const units = document.getElementById('units').value;
 
   // convert if user uses imperial units (sanLength is provided in ft)
   if(units === 'imperial') sanLength = sanLength / M_TO_FT;
 
-  // Fixture units map (could be expanded per code)
+  // Fixture units map
   const fixtureUnitsMap = { wc:6, lav:1, sink:2, shower:2, tub:2, urinal:4, floorDrain:2 };
   const totalFixtureUnits = Math.max(0, Math.round(wc*fixtureUnitsMap.wc + lav*fixtureUnitsMap.lav + sink*fixtureUnitsMap.sink + shower*fixtureUnitsMap.shower + tub*fixtureUnitsMap.tub + urinal*fixtureUnitsMap.urinal + floorDrain*fixtureUnitsMap.floorDrain));
 
-  // Drainage load (internal precision)
+  // Drainage load
   const drainageLoad_Ls = formatNumberInternal(totalFixtureUnits * 0.8, 4);
 
-  // Recommended pipe size using conservative mapping (simple heuristic; verify with code)
+  // Recommended pipe size
   let pipeSize;
   if(totalFixtureUnits <= 21) pipeSize = 50;
   else if(totalFixtureUnits <= 40) pipeSize = 75;
@@ -696,13 +763,21 @@ function calculateSanitary(){
   else if(totalFixtureUnits <= 800) pipeSize = 150;
   else pipeSize = 200;
 
-  // quantities with spacing defaults (respect the internal constants)
+  // quantities - use manual inputs if provided, otherwise calculate automatically
   const pipeQuantity = Math.ceil(sanLength / sanPipeLengthMeters);
-  const traps = wc + lav + sink + shower + tub + urinal + floorDrain;
-  const vents = wc + lav + sink + shower + tub + urinal;
-  const cleanouts = Math.max(0, Math.ceil(sanLength / DEFAULT_CLEANOUT_SPACING_M));
-  const sanManholes = Math.max(0, Math.ceil(sanLength / DEFAULT_MANHOLE_SPACING_M));
-  const sanFittings = Math.max(0, Math.ceil(sanLength / 10));
+  
+  // Check for manual inputs
+  const manualTraps = safeNumber(document.getElementById('sanTrapsManual').value);
+  const manualVents = safeNumber(document.getElementById('sanVentsManual').value);
+  const manualCleanouts = safeNumber(document.getElementById('sanCleanoutsManual').value);
+  const manualManholes = safeNumber(document.getElementById('sanManholesManual').value);
+  const manualFittings = safeNumber(document.getElementById('sanFittingsManual').value);
+  
+  const traps = manualTraps > 0 ? manualTraps : (wc + lav + sink + shower + tub + urinal + floorDrain);
+  const vents = manualVents > 0 ? manualVents : (wc + lav + sink + shower + tub + urinal);
+  const cleanouts = manualCleanouts > 0 ? manualCleanouts : Math.max(0, Math.ceil(sanLength / DEFAULT_CLEANOUT_SPACING_M));
+  const sanManholes = manualManholes > 0 ? manualManholes : Math.max(0, Math.ceil(sanLength / DEFAULT_MANHOLE_SPACING_M));
+  const sanFittings = manualFittings > 0 ? manualFittings : Math.max(0, Math.ceil(sanLength / 10));
 
   sanitaryResults = {
     totalFixtureUnits,
@@ -714,27 +789,35 @@ function calculateSanitary(){
     vents,
     cleanouts,
     manholes: sanManholes,
-    fittings: sanFittings
+    fittings: sanFittings,
+    usedManual: {
+      traps: manualTraps > 0,
+      vents: manualVents > 0,
+      cleanouts: manualCleanouts > 0,
+      manholes: manualManholes > 0,
+      fittings: manualFittings > 0
+    }
   };
 
-  // display results (friendly formatting)
+  // display results
   const out = document.getElementById('sanitaryOutput');
   const flowDisplay = units==='metric' ? formatNumber(sanitaryResults.drainageLoad_Ls,2) + ' L/s' : formatNumber(sanitaryResults.drainageLoad_Ls * LS_TO_GPM,2) + ' gpm';
   const pipeLengthDisplay = units==='metric' ? formatNumber(sanitaryResults.pipeLength_m,1) + ' m' : formatNumber(sanitaryResults.pipeLength_m * M_TO_FT,1) + ' ft';
+  
+  let accessoriesHTML = `<p><strong>Accessories:</strong></p><ul>`;
+  accessoriesHTML += `<li>Traps: ${sanitaryResults.traps} ${sanitaryResults.usedManual.traps ? '(Manual Input)' : '(Auto-calculated)'}</li>`;
+  accessoriesHTML += `<li>Vents: ${sanitaryResults.vents} ${sanitaryResults.usedManual.vents ? '(Manual Input)' : '(Auto-calculated)'}</li>`;
+  accessoriesHTML += `<li>Cleanouts: ${sanitaryResults.cleanouts} ${sanitaryResults.usedManual.cleanouts ? '(Manual Input)' : '(Auto: 1 per ' + DEFAULT_CLEANOUT_SPACING_M + 'm)'}</li>`;
+  accessoriesHTML += `<li>Manholes: ${sanitaryResults.manholes} ${sanitaryResults.usedManual.manholes ? '(Manual Input)' : '(Auto: 1 per ' + DEFAULT_MANHOLE_SPACING_M + 'm)'}</li>`;
+  accessoriesHTML += `<li>Fittings/Elbows: ${sanitaryResults.fittings} ${sanitaryResults.usedManual.fittings ? '(Manual Input)' : '(Auto: 1 per 10m)'}</li></ul>`;
+
   out.innerHTML = `<h3>Sanitary System Results</h3>
     <p><strong>Total Fixture Units:</strong> ${formatNumber(sanitaryResults.totalFixtureUnits,0)}</p>
     <p><strong>Drainage Load:</strong> ${flowDisplay}</p>
     <p><strong>Recommended Pipe Size:</strong> ${sanitaryResults.pipeSize} mm</p>
     <p><strong>Pipe Quantity:</strong> ${sanitaryResults.pipeQuantity} pcs</p>
     <p><strong>Pipe Length:</strong> ${pipeLengthDisplay}</p>
-    <p><strong>Accessories (est.):</strong></p>
-    <ul>
-      <li>Traps: ${sanitaryResults.traps}</li>
-      <li>Vents: ${sanitaryResults.vents}</li>
-      <li>Cleanouts (~every ${DEFAULT_CLEANOUT_SPACING_M} m): ${sanitaryResults.cleanouts}</li>
-      <li>Manholes (~every ${DEFAULT_MANHOLE_SPACING_M} m): ${sanitaryResults.manholes}</li>
-      <li>Fittings/Elbows: ${sanitaryResults.fittings}</li>
-    </ul>`;
+    ${accessoriesHTML}`;
   out.style.display = 'block';
   return sanitaryResults;
 }
@@ -747,7 +830,6 @@ function calculateStorm(){
   const units = document.getElementById('units').value;
   let roofArea = clampMin(safeNumber(document.getElementById('roofArea').value,0), 0);
   let pavementArea = clampMin(safeNumber(document.getElementById('pavementArea').value,0), 0);
-  // Use intensity input. If left blank or zero, fallback to a preset (medium)
   let intensity = clampMin(safeNumber(document.getElementById('intensity').value, 0), 0);
   const coef = clampMin(safeNumber(document.getElementById('coef').value,0.9), 0.0);
   let stormLength = clampMin(safeNumber(document.getElementById('stormLength').value,0), 0);
@@ -764,10 +846,9 @@ function calculateStorm(){
   }
 
   const totalArea_m2 = roofArea + pavementArea;
-  // Storm Q (L/s) = C * I(mm/hr) * A(m2) / 360  (given formula)
   const runoff_Ls = formatNumberInternal(coef * intensity * totalArea_m2 / 360, 4);
 
-  // recommend pipe sizes using heuristic mapping
+  // recommend pipe sizes
   let pipeSize;
   if (runoff_Ls <= 1.2) pipeSize = 75;
   else if (runoff_Ls <= 2.5) pipeSize = 100;
@@ -776,10 +857,17 @@ function calculateStorm(){
   else pipeSize = 250;
 
   const pipeQuantity = Math.ceil(stormLength / stormPipeLengthMeters);
-  const downspouts = Math.max(0, Math.ceil((roofArea) / 100));
-  const catchBasins = Math.max(0, Math.ceil(stormLength / 60));
-  const stormManholes = Math.max(0, Math.ceil(stormLength / DEFAULT_MANHOLE_SPACING_M));
-  const stormFittings = Math.max(0, Math.ceil(stormLength / 10));
+  
+  // Check for manual inputs
+  const manualDownspouts = safeNumber(document.getElementById('stormDownspoutsManual').value);
+  const manualCatchBasins = safeNumber(document.getElementById('stormCatchBasinsManual').value);
+  const manualManholes = safeNumber(document.getElementById('stormManholesManual').value);
+  const manualFittings = safeNumber(document.getElementById('stormFittingsManual').value);
+  
+  const downspouts = manualDownspouts > 0 ? manualDownspouts : Math.max(0, Math.ceil((roofArea) / 100));
+  const catchBasins = manualCatchBasins > 0 ? manualCatchBasins : Math.max(0, Math.ceil(stormLength / 60));
+  const stormManholes = manualManholes > 0 ? manualManholes : Math.max(0, Math.ceil(stormLength / DEFAULT_MANHOLE_SPACING_M));
+  const stormFittings = manualFittings > 0 ? manualFittings : Math.max(0, Math.ceil(stormLength / 10));
 
   stormResults = {
     totalArea_m2: formatNumberInternal(totalArea_m2,4),
@@ -792,7 +880,13 @@ function calculateStorm(){
     manholes: stormManholes,
     fittings: stormFittings,
     coef,
-    intensity_mm_per_hr: formatNumberInternal(intensity,4)
+    intensity_mm_per_hr: formatNumberInternal(intensity,4),
+    usedManual: {
+      downspouts: manualDownspouts > 0,
+      catchBasins: manualCatchBasins > 0,
+      manholes: manualManholes > 0,
+      fittings: manualFittings > 0
+    }
   };
 
   const out = document.getElementById('stormOutput');
@@ -800,6 +894,12 @@ function calculateStorm(){
   const intensityDisplay = units === 'metric' ? formatNumber(stormResults.intensity_mm_per_hr,1) + ' mm/hr' : formatNumber(stormResults.intensity_mm_per_hr * MM_TO_IN,2) + ' in/hr';
   const runoffDisplay = units === 'metric' ? formatNumber(stormResults.runoff_Ls,2) + ' L/s' : formatNumber(stormResults.runoff_Ls * LS_TO_GPM,2) + ' gpm';
   const pipeLengthDisplay = units === 'metric' ? formatNumber(stormResults.pipeLength_m,1) + ' m' : formatNumber(stormResults.pipeLength_m * M_TO_FT,1) + ' ft';
+
+  let accessoriesHTML = `<p><strong>Accessories:</strong></p><ul>`;
+  accessoriesHTML += `<li>Downspouts: ${stormResults.downspouts} ${stormResults.usedManual.downspouts ? '(Manual Input)' : '(Auto: 1 per 100m² roof)'}</li>`;
+  accessoriesHTML += `<li>Catch Basins: ${stormResults.catchBasins} ${stormResults.usedManual.catchBasins ? '(Manual Input)' : '(Auto: 1 per 60m)'}</li>`;
+  accessoriesHTML += `<li>Manholes: ${stormResults.manholes} ${stormResults.usedManual.manholes ? '(Manual Input)' : '(Auto: 1 per ' + DEFAULT_MANHOLE_SPACING_M + 'm)'}</li>`;
+  accessoriesHTML += `<li>Fittings/Elbows: ${stormResults.fittings} ${stormResults.usedManual.fittings ? '(Manual Input)' : '(Auto: 1 per 10m)'}</li></ul>`;
 
   out.innerHTML = `<h3>Storm Drain System Results</h3>
     <p><strong>Total Area:</strong> ${areaDisplay}</p>
@@ -809,13 +909,7 @@ function calculateStorm(){
     <p><strong>Recommended Pipe Size:</strong> ${stormResults.pipeSize} mm</p>
     <p><strong>Pipe Quantity:</strong> ${stormResults.pipeQuantity} pcs</p>
     <p><strong>Pipe Length:</strong> ${pipeLengthDisplay}</p>
-    <p><strong>Accessories (est.):</strong></p>
-    <ul>
-      <li>Downspouts: ${stormResults.downspouts}</li>
-      <li>Catch Basins: ${stormResults.catchBasins}</li>
-      <li>Manholes (~every ${DEFAULT_MANHOLE_SPACING_M} m): ${stormResults.manholes}</li>
-      <li>Fittings/Elbows: ${stormResults.fittings}</li>
-    </ul>`;
+    ${accessoriesHTML}`;
   out.style.display = 'block';
   return stormResults;
 }
@@ -1413,7 +1507,17 @@ function saveProjectAsJSON(){
     }),
     stormPipes: Array.from(document.getElementById('stormPipesContainer').getElementsByClassName('pipe-cost-row')||[]).map(div=>{
       return { size: div.querySelector('.size-select').value, cost: div.querySelector('.cost-input').value };
-    })
+    }),
+    // manual accessory inputs
+    sanTrapsManual: document.getElementById('sanTrapsManual').value,
+    sanVentsManual: document.getElementById('sanVentsManual').value,
+    sanCleanoutsManual: document.getElementById('sanCleanoutsManual').value,
+    sanManholesManual: document.getElementById('sanManholesManual').value,
+    sanFittingsManual: document.getElementById('sanFittingsManual').value,
+    stormDownspoutsManual: document.getElementById('stormDownspoutsManual').value,
+    stormCatchBasinsManual: document.getElementById('stormCatchBasinsManual').value,
+    stormManholesManual: document.getElementById('stormManholesManual').value,
+    stormFittingsManual: document.getElementById('stormFittingsManual').value
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
@@ -1514,6 +1618,17 @@ function loadProjectFromJSON(event){
           container.appendChild(div);
         });
       }
+
+      // manual accessory inputs
+      if('sanTrapsManual' in data) document.getElementById('sanTrapsManual').value = data.sanTrapsManual;
+      if('sanVentsManual' in data) document.getElementById('sanVentsManual').value = data.sanVentsManual;
+      if('sanCleanoutsManual' in data) document.getElementById('sanCleanoutsManual').value = data.sanCleanoutsManual;
+      if('sanManholesManual' in data) document.getElementById('sanManholesManual').value = data.sanManholesManual;
+      if('sanFittingsManual' in data) document.getElementById('sanFittingsManual').value = data.sanFittingsManual;
+      if('stormDownspoutsManual' in data) document.getElementById('stormDownspoutsManual').value = data.stormDownspoutsManual;
+      if('stormCatchBasinsManual' in data) document.getElementById('stormCatchBasinsManual').value = data.stormCatchBasinsManual;
+      if('stormManholesManual' in data) document.getElementById('stormManholesManual').value = data.stormManholesManual;
+      if('stormFittingsManual' in data) document.getElementById('stormFittingsManual').value = data.stormFittingsManual;
 
       setTimeout(()=>{ alert('Project loaded from JSON. You may now re-run calculations.'); }, 50);
     }catch(err){
