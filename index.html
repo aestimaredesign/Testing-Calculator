@@ -949,11 +949,10 @@ function exportToPDF(){
     
     // Set consistent font family for entire document
     doc.setFont('helvetica');
-    doc.setFontSize(10); // Set base font size
+    doc.setFontSize(10);
 
     const leftMargin = 40;
     const topMargin = 40;
-    const rightLimit = doc.internal.pageSize.getWidth() - 40;
     const bottomLimit = doc.internal.pageSize.getHeight() - 60;
     let y = topMargin;
 
@@ -961,18 +960,15 @@ function exportToPDF(){
       if (y + linesNeeded > bottomLimit){
         doc.addPage();
         y = topMargin;
-        // Reset font on new page
         doc.setFont('helvetica');
         doc.setFontSize(10);
       }
     }
 
-    // Title - make it bold but same font family
+    // Title
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text("Sanitary & Storm Drain Report", leftMargin, y);
-    
-    // Reset to normal for body text
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     y += 18;
@@ -991,7 +987,7 @@ function exportToPDF(){
     doc.text(`Date: ${dateStr}`, 380, y);
     y += 14;
     doc.text(`Prepared by: ${preparedBy}`, leftMargin, y);
-    y += 16;
+    y += 20;
 
     // Bill of Quantities Title
     doc.setFontSize(12);
@@ -1000,12 +996,11 @@ function exportToPDF(){
     doc.setFont('helvetica', 'normal');
     y += 8;
 
-    // BOQ table - ensure consistent font settings
+    // BOQ table
     const boq = extractBOQDataForPDF();
-    const header = [["Description","Quantity","Unit","Unit Rate","Amount"]];
     doc.autoTable({
       startY: y,
-      head: header,
+      head: [["Description","Quantity","Unit","Unit Rate","Amount"]],
       body: boq.slice(1),
       theme: 'grid',
       styles: { 
@@ -1013,7 +1008,7 @@ function exportToPDF(){
         fontSize: 10, 
         cellPadding: 6, 
         overflow: 'linebreak',
-        fontStyle: 'normal' // Ensure normal font style
+        fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [230,230,230], 
@@ -1049,7 +1044,6 @@ function exportToPDF(){
         }
       },
       didDrawPage: function(data){
-        // Reset font for page numbers
         doc.setFont('helvetica');
         doc.setFontSize(9);
         doc.setTextColor(120);
@@ -1058,103 +1052,104 @@ function exportToPDF(){
       }
     });
 
-    // Position after table and reset font
-    y = doc.autoTable.previous.finalY + 20;
+    // Position after table
+    y = doc.autoTable.previous.finalY + 25;
     doc.setFont('helvetica');
     doc.setFontSize(10);
 
+    // Function to create summary boxes automatically
+    function createSummaryBox(title, contentLines, boxPadding = 12) {
+      newPageIfNeeded((contentLines.length + 2) * 14 + 20);
+      
+      const boxX = leftMargin - 4;
+      const boxWidth = doc.internal.pageSize.getWidth() - leftMargin * 2 + 8;
+      const startY = y;
+      
+      // Calculate text height first
+      let currentY = y;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      currentY += 14; // Title height
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      contentLines.forEach(() => {
+        currentY += 12; // Each content line
+      });
+      
+      const boxHeight = currentY - startY + boxPadding;
+      
+      // Check if we need a new page for the entire box
+      if (startY + boxHeight > bottomLimit) {
+        doc.addPage();
+        y = topMargin;
+        return createSummaryBox(title, contentLines, boxPadding); // Recursive call with new page
+      }
+      
+      // Draw the box first
+      doc.setDrawColor(200);
+      doc.rect(boxX, startY - 6, boxWidth, boxHeight, 'S');
+      
+      // Now draw the content
+      currentY = y;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(title, leftMargin, currentY);
+      currentY += 14;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      contentLines.forEach(line => {
+        doc.text(line, leftMargin, currentY);
+        currentY += 12;
+      });
+      
+      y = currentY + 8; // Add some spacing after the box
+      return y;
+    }
+
     // SANITARY SUMMARY BOX
-    newPageIfNeeded(110);
-    const boxPadding = 8;
-    const boxX = leftMargin - 4;
-    const boxWidth = doc.internal.pageSize.getWidth() - leftMargin*2 + 8;
-    let boxY = y - 6;
-    let currentY = y;
-
-    // Set font for sanitary summary
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('Sanitary System Summary', leftMargin, currentY);
-    doc.setFont('helvetica', 'normal');
-    currentY += 12;
-    doc.text(`Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`, leftMargin, currentY);
-    currentY += 12;
-    const sanFlowDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(sanitaryResults.drainageLoad_Ls,2)} L/s` : `${formatNumber(sanitaryResults.drainageLoad_Ls*LS_TO_GPM,2)} gpm`;
-    doc.text(`Drainage Load: ${sanFlowDisplay}`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Pipe Size: ${sanitaryResults.pipeSize} mm`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Pipe Quantity: ${sanitaryResults.pipeQuantity} pcs`, leftMargin, currentY);
-    currentY += 12;
-    const sanLenDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(sanitaryResults.pipeLength_m,1)} m` : `${formatNumber(sanitaryResults.pipeLength_m*M_TO_FT,1)} ft`;
-    doc.text(`Pipe Length: ${sanLenDisplay}`, leftMargin, currentY);
-    currentY += 12;
-
-    // draw subtle box around sanitary summary
-    doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
-
-    y = currentY + 12;
+    const sanitaryContent = [
+      `Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`,
+      `Drainage Load: ${document.getElementById('units').value==='metric' ? 
+        formatNumber(sanitaryResults.drainageLoad_Ls,2)+' L/s' : 
+        formatNumber(sanitaryResults.drainageLoad_Ls*LS_TO_GPM,2)+' gpm'}`,
+      `Pipe Size: ${sanitaryResults.pipeSize} mm`,
+      `Pipe Quantity: ${sanitaryResults.pipeQuantity} pcs`,
+      `Pipe Length: ${document.getElementById('units').value==='metric' ? 
+        formatNumber(sanitaryResults.pipeLength_m,1)+' m' : 
+        formatNumber(sanitaryResults.pipeLength_m*M_TO_FT,1)+' ft'}`
+    ];
+    y = createSummaryBox('Sanitary System Summary', sanitaryContent);
 
     // STORM SUMMARY BOX
-    newPageIfNeeded(140);
-    boxY = y - 6;
-    currentY = y;
-    
-    // Set font for storm summary (same as sanitary)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('Storm Drain Summary', leftMargin, currentY);
-    doc.setFont('helvetica', 'normal');
-    currentY += 12;
-    const stormAreaDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.totalArea_m2,2)} m²` : `${formatNumber(stormResults.totalArea_m2*M2_TO_FT2,2)} ft²`;
-    doc.text(`Total Area: ${stormAreaDisplay}`, leftMargin, currentY);
-    currentY += 12;
-    const stormRunoffDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.runoff_Ls,2)} L/s` : `${formatNumber(stormResults.runoff_Ls*LS_TO_GPM,2)} gpm`;
-    doc.text(`Runoff: ${stormRunoffDisplay}`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Pipe Size: ${stormResults.pipeSize} mm`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Pipe Quantity: ${stormResults.pipeQuantity} pcs`, leftMargin, currentY);
-    currentY += 12;
-    const stormLenDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.pipeLength_m,1)} m` : `${formatNumber(stormResults.pipeLength_m*M_TO_FT,1)} ft`;
-    doc.text(`Pipe Length: ${stormLenDisplay}`, leftMargin, currentY);
-    currentY += 12;
-
-    // draw subtle box around storm summary
-    doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
-
-    y = currentY + 12;
+    const stormContent = [
+      `Total Area: ${document.getElementById('units').value==='metric' ? 
+        formatNumber(stormResults.totalArea_m2,2)+' m²' : 
+        formatNumber(stormResults.totalArea_m2*M2_TO_FT2,2)+' ft²'}`,
+      `Runoff: ${document.getElementById('units').value==='metric' ? 
+        formatNumber(stormResults.runoff_Ls,2)+' L/s' : 
+        formatNumber(stormResults.runoff_Ls*LS_TO_GPM,2)+' gpm'}`,
+      `Pipe Size: ${stormResults.pipeSize} mm`,
+      `Pipe Quantity: ${stormResults.pipeQuantity} pcs`,
+      `Pipe Length: ${document.getElementById('units').value==='metric' ? 
+        formatNumber(stormResults.pipeLength_m,1)+' m' : 
+        formatNumber(stormResults.pipeLength_m*M_TO_FT,1)+' ft'}`
+    ];
+    y = createSummaryBox('Storm Drain Summary', stormContent);
 
     // LABOR SUMMARY BOX
-    newPageIfNeeded(160);
-    boxY = y - 6;
-    currentY = y;
-    
-    // Set font for labor summary (same as others)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('Labor Requirements', leftMargin, currentY);
-    doc.setFont('helvetica', 'normal');
-    currentY += 12;
-    doc.text(`Total Labor Hours: ${formatNumber(laborResults.totalLaborHours,1)} hrs`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Plumber Hours: ${formatNumber(laborResults.plumberHours,1)} hrs`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Helper Hours: ${formatNumber(laborResults.helperHours,1)} hrs`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Equivalent Man-Days (single worker): ${formatNumber(laborResults.totalLaborDays,2)} days`, leftMargin, currentY);
-    currentY += 12;
-    doc.text(`Total Labor Cost: ${formatCurrencyForPDF(laborResults.totalLaborCost)}`, leftMargin, currentY);
-    currentY += 12;
-    const prodLine = `Pipe: ${document.getElementById('productivityPipe').value} ${document.getElementById('productivityPipeUnit').textContent}; Manhole: ${document.getElementById('productivityManhole').value} ${document.getElementById('productivityManholeUnit').textContent}; Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`;
-    doc.text(`Productivity rates used: ${prodLine}`, leftMargin, currentY, {maxWidth: boxWidth - 20});
-    currentY += 12;
-
-    // draw subtle box around labor summary
-    doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
+    const laborContent = [
+      `Total Labor Hours: ${formatNumber(laborResults.totalLaborHours,1)} hrs`,
+      `Plumber Hours: ${formatNumber(laborResults.plumberHours,1)} hrs`,
+      `Helper Hours: ${formatNumber(laborResults.helperHours,1)} hrs`,
+      `Equivalent Man-Days: ${formatNumber(laborResults.totalLaborDays,2)} days`,
+      `Total Labor Cost: ${formatCurrencyForPDF(laborResults.totalLaborCost)}`,
+      `Productivity rates: Pipe: ${document.getElementById('productivityPipe').value} ${document.getElementById('productivityPipeUnit').textContent}`,
+      `Manhole: ${document.getElementById('productivityManhole').value} ${document.getElementById('productivityManholeUnit').textContent}`,
+      `Fitting: ${document.getElementById('productivityFitting').value} ${document.getElementById('productivityFittingUnit').textContent}`
+    ];
+    y = createSummaryBox('Labor Requirements', laborContent);
 
     // save file
     const safeName = (document.getElementById('projectName').value||'project').replace(/[^a-z0-9]/gi,'_');
