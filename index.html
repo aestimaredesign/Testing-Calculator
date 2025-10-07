@@ -946,7 +946,10 @@ function exportToPDF(){
   try{
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'pt', format:'a4' });
+    
+    // Set consistent font family for entire document
     doc.setFont('helvetica');
+    doc.setFontSize(10); // Set base font size
 
     const leftMargin = 40;
     const topMargin = 40;
@@ -958,14 +961,20 @@ function exportToPDF(){
       if (y + linesNeeded > bottomLimit){
         doc.addPage();
         y = topMargin;
+        // Reset font on new page
+        doc.setFont('helvetica');
+        doc.setFontSize(10);
       }
     }
 
+    // Title - make it bold but same font family
     doc.setFontSize(16);
-    doc.setFont(undefined,'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text("Sanitary & Storm Drain Report", leftMargin, y);
+    
+    // Reset to normal for body text
     doc.setFontSize(10);
-    doc.setFont(undefined,'normal');
+    doc.setFont('helvetica', 'normal');
     y += 18;
 
     // Project Info
@@ -986,12 +995,12 @@ function exportToPDF(){
 
     // Bill of Quantities Title
     doc.setFontSize(12);
-    doc.setFont(undefined,'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text("Bill of Quantities", leftMargin, y);
-    doc.setFont(undefined,'normal');
+    doc.setFont('helvetica', 'normal');
     y += 8;
 
-    // BOQ table
+    // BOQ table - ensure consistent font settings
     const boq = extractBOQDataForPDF();
     const header = [["Description","Quantity","Unit","Unit Rate","Amount"]];
     doc.autoTable({
@@ -999,14 +1008,30 @@ function exportToPDF(){
       head: header,
       body: boq.slice(1),
       theme: 'grid',
-      styles: { font: 'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
-      headStyles: { fillColor: [230,230,230], textColor: 0, halign:'center', fontStyle:'bold' },
+      styles: { 
+        font: 'helvetica', 
+        fontSize: 10, 
+        cellPadding: 6, 
+        overflow: 'linebreak',
+        fontStyle: 'normal' // Ensure normal font style
+      },
+      headStyles: { 
+        fillColor: [230,230,230], 
+        textColor: 0, 
+        halign: 'center', 
+        fontStyle: 'bold',
+        font: 'helvetica'
+      },
+      bodyStyles: {
+        font: 'helvetica',
+        fontStyle: 'normal'
+      },
       columnStyles: {
-        0: { cellWidth: 200, halign:'left' },
-        1: { cellWidth: 60, halign:'center' },
-        2: { cellWidth: 60, halign:'center' },
-        3: { cellWidth: 100, halign:'right' },
-        4: { cellWidth: 100, halign:'right' }
+        0: { cellWidth: 200, halign: 'left', font: 'helvetica' },
+        1: { cellWidth: 60, halign: 'center', font: 'helvetica' },
+        2: { cellWidth: 60, halign: 'center', font: 'helvetica' },
+        3: { cellWidth: 100, halign: 'right', font: 'helvetica' },
+        4: { cellWidth: 100, halign: 'right', font: 'helvetica' }
       },
       didParseCell: function(data){
         const txt = (data.cell.raw||'').toString();
@@ -1015,23 +1040,28 @@ function exportToPDF(){
           data.cell.styles.halign = 'left';
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fillColor = [240,240,240];
+          data.cell.styles.font = 'helvetica';
         }
         if(txt.includes("TOTAL PROJECT COST")){
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fillColor = [200,200,200];
+          data.cell.styles.font = 'helvetica';
         }
       },
       didDrawPage: function(data){
-        // page footer (only page number, no other footer per request)
-        const pageSize = doc.internal.pageSize;
+        // Reset font for page numbers
+        doc.setFont('helvetica');
         doc.setFontSize(9);
         doc.setTextColor(120);
+        const pageSize = doc.internal.pageSize;
         doc.text(`Page ${data.pageNumber}`, pageSize.width - 60, pageSize.height - 30);
       }
     });
 
-    // Position after table
+    // Position after table and reset font
     y = doc.autoTable.previous.finalY + 20;
+    doc.setFont('helvetica');
+    doc.setFontSize(10);
 
     // SANITARY SUMMARY BOX
     newPageIfNeeded(110);
@@ -1041,10 +1071,11 @@ function exportToPDF(){
     let boxY = y - 6;
     let currentY = y;
 
-    doc.setFont(undefined,'bold');
+    // Set font for sanitary summary
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('Sanitary System Summary', leftMargin, currentY);
-    doc.setFont(undefined,'normal');
+    doc.setFont('helvetica', 'normal');
     currentY += 12;
     doc.text(`Total Fixture Units: ${sanitaryResults.totalFixtureUnits}`, leftMargin, currentY);
     currentY += 12;
@@ -1060,9 +1091,8 @@ function exportToPDF(){
     currentY += 12;
 
     // draw subtle box around sanitary summary
-    const boxHeight = (currentY - boxY) + boxPadding;
     doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, boxHeight, 'S');
+    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
 
     y = currentY + 12;
 
@@ -1070,10 +1100,12 @@ function exportToPDF(){
     newPageIfNeeded(140);
     boxY = y - 6;
     currentY = y;
-    doc.setFont(undefined,'bold');
+    
+    // Set font for storm summary (same as sanitary)
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('Storm Drain Summary', leftMargin, currentY);
-    doc.setFont(undefined,'normal');
+    doc.setFont('helvetica', 'normal');
     currentY += 12;
     const stormAreaDisplay = document.getElementById('units').value==='metric' ? `${formatNumber(stormResults.totalArea_m2,2)} m²` : `${formatNumber(stormResults.totalArea_m2*M2_TO_FT2,2)} ft²`;
     doc.text(`Total Area: ${stormAreaDisplay}`, leftMargin, currentY);
@@ -1090,9 +1122,8 @@ function exportToPDF(){
     currentY += 12;
 
     // draw subtle box around storm summary
-    const boxHeightStorm = (currentY - boxY) + boxPadding;
     doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, boxHeightStorm, 'S');
+    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
 
     y = currentY + 12;
 
@@ -1100,10 +1131,12 @@ function exportToPDF(){
     newPageIfNeeded(160);
     boxY = y - 6;
     currentY = y;
-    doc.setFont(undefined,'bold');
+    
+    // Set font for labor summary (same as others)
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('Labor Requirements', leftMargin, currentY);
-    doc.setFont(undefined,'normal');
+    doc.setFont('helvetica', 'normal');
     currentY += 12;
     doc.text(`Total Labor Hours: ${formatNumber(laborResults.totalLaborHours,1)} hrs`, leftMargin, currentY);
     currentY += 12;
@@ -1120,9 +1153,8 @@ function exportToPDF(){
     currentY += 12;
 
     // draw subtle box around labor summary
-    const boxHeightLabor = (currentY - boxY) + boxPadding;
     doc.setDrawColor(200);
-    doc.rect(boxX, boxY, boxWidth, boxHeightLabor, 'S');
+    doc.rect(boxX, boxY, boxWidth, (currentY - boxY) + boxPadding, 'S');
 
     // save file
     const safeName = (document.getElementById('projectName').value||'project').replace(/[^a-z0-9]/gi,'_');
